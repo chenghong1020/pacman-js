@@ -522,37 +522,7 @@ class GameCoordinator {
    * Handle behavior for the pause key
    */
   handlePauseKey() {
-    if (this.allowPause) {
-      this.allowPause = false;
-
-      setTimeout(() => {
-        if (!this.cutscene) {
-          this.allowPause = true;
-        }
-      }, 500);
-
-      this.gameEngine.changePausedState(this.gameEngine.running);
-      this.soundManager.play('pause');
-
-      if (this.gameEngine.started) {
-        this.soundManager.resumeAmbience();
-        this.gameUi.style.filter = 'unset';
-        this.pausedText.style.visibility = 'hidden';
-        this.pauseButton.innerHTML = 'pause';
-        this.activeTimers.forEach((timer) => {
-          timer.resume();
-        });
-      } else {
-        this.soundManager.stopAmbience();
-        this.soundManager.setAmbience('pause_beat', true);
-        this.gameUi.style.filter = 'blur(5px)';
-        this.pausedText.style.visibility = 'visible';
-        this.pauseButton.innerHTML = 'play_arrow';
-        this.activeTimers.forEach((timer) => {
-          timer.pause();
-        });
-      }
-    }
+    this.gameFlow.handlePauseKey();
   }
 
   /**

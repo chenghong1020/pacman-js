@@ -278,6 +278,41 @@ class GameFlow {
       }, 250);
     }, 2000);
   }
+
+  handlePauseKey() {
+    if (this.gameCoord.allowPause) {
+      this.gameCoord.allowPause = false;
+
+      setTimeout(() => {
+        if (!this.gameCoord.cutscene) {
+          this.gameCoord.allowPause = true;
+        }
+      }, 500);
+
+      this.gameCoord.gameEngine
+        .changePausedState(this.gameCoord.gameEngine.running);
+      this.gameCoord.soundManager.play('pause');
+
+      if (this.gameCoord.gameEngine.started) {
+        this.gameCoord.soundManager.resumeAmbience();
+        this.gameCoord.gameUi.style.filter = 'unset';
+        this.gameCoord.pausedText.style.visibility = 'hidden';
+        this.gameCoord.pauseButton.innerHTML = 'pause';
+        this.gameCoord.activeTimers.forEach((timer) => {
+          timer.resume();
+        });
+      } else {
+        this.gameCoord.soundManager.stopAmbience();
+        this.gameCoord.soundManager.setAmbience('pause_beat', true);
+        this.gameCoord.gameUi.style.filter = 'blur(5px)';
+        this.gameCoord.pausedText.style.visibility = 'visible';
+        this.gameCoord.pauseButton.innerHTML = 'play_arrow';
+        this.gameCoord.activeTimers.forEach((timer) => {
+          timer.pause();
+        });
+      }
+    }
+  }
 }
 
 // removeIf(production)

@@ -1632,37 +1632,7 @@ class GameCoordinator {
    * Handle behavior for the pause key
    */
   handlePauseKey() {
-    if (this.allowPause) {
-      this.allowPause = false;
-
-      setTimeout(() => {
-        if (!this.cutscene) {
-          this.allowPause = true;
-        }
-      }, 500);
-
-      this.gameEngine.changePausedState(this.gameEngine.running);
-      this.soundManager.play('pause');
-
-      if (this.gameEngine.started) {
-        this.soundManager.resumeAmbience();
-        this.gameUi.style.filter = 'unset';
-        this.pausedText.style.visibility = 'hidden';
-        this.pauseButton.innerHTML = 'pause';
-        this.activeTimers.forEach((timer) => {
-          timer.resume();
-        });
-      } else {
-        this.soundManager.stopAmbience();
-        this.soundManager.setAmbience('pause_beat', true);
-        this.gameUi.style.filter = 'blur(5px)';
-        this.pausedText.style.visibility = 'visible';
-        this.pauseButton.innerHTML = 'play_arrow';
-        this.activeTimers.forEach((timer) => {
-          timer.pause();
-        });
-      }
-    }
+    this.gameFlow.handlePauseKey();
   }
 
   /**
@@ -2442,6 +2412,41 @@ class GameFlow {
         }, 250);
       }, 250);
     }, 2000);
+  }
+
+  handlePauseKey() {
+    if (this.gameCoord.allowPause) {
+      this.gameCoord.allowPause = false;
+
+      setTimeout(() => {
+        if (!this.gameCoord.cutscene) {
+          this.gameCoord.allowPause = true;
+        }
+      }, 500);
+
+      this.gameCoord.gameEngine
+        .changePausedState(this.gameCoord.gameEngine.running);
+      this.gameCoord.soundManager.play('pause');
+
+      if (this.gameCoord.gameEngine.started) {
+        this.gameCoord.soundManager.resumeAmbience();
+        this.gameCoord.gameUi.style.filter = 'unset';
+        this.gameCoord.pausedText.style.visibility = 'hidden';
+        this.gameCoord.pauseButton.innerHTML = 'pause';
+        this.gameCoord.activeTimers.forEach((timer) => {
+          timer.resume();
+        });
+      } else {
+        this.gameCoord.soundManager.stopAmbience();
+        this.gameCoord.soundManager.setAmbience('pause_beat', true);
+        this.gameCoord.gameUi.style.filter = 'blur(5px)';
+        this.gameCoord.pausedText.style.visibility = 'visible';
+        this.gameCoord.pauseButton.innerHTML = 'play_arrow';
+        this.gameCoord.activeTimers.forEach((timer) => {
+          timer.pause();
+        });
+      }
+    }
   }
 }
 

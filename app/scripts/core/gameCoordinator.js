@@ -312,44 +312,9 @@ class GameCoordinator {
    * @param {Boolean} initialStart - Special condition for the game's beginning
    */
   startGameplay(initialStart) {
-    if (initialStart) {
-      this.soundManager.play('game_start');
-    }
-
-    this.scaredGhosts = [];
-    this.eyeGhosts = 0;
-    this.allowPacmanMovement = false;
-
-    const left = this.scaledTileSize * 11;
-    const top = this.scaledTileSize * 16.5;
-    const duration = initialStart ? 4500 : 2000;
-    const width = this.scaledTileSize * 6;
-    const height = this.scaledTileSize * 2;
-
-    this.displayText({ left, top }, 'ready', duration, width, height);
-    this.updateExtraLivesDisplay();
-
-    new Timer(() => {
-      this.allowPause = true;
-      this.cutscene = false;
-      this.soundManager.setCutscene(this.cutscene);
-      this.soundManager.setAmbience(this.determineSiren(this.remainingDots));
-
-      this.allowPacmanMovement = true;
-      this.pacman.moving = true;
-
-      this.ghosts.forEach((ghost) => {
-        const ghostRef = ghost;
-        ghostRef.moving = true;
-      });
-
-      this.ghostCycle('scatter');
-
-      this.idleGhosts = [this.pinky, this.inky, this.clyde];
-      this.releaseGhost();
-    }, duration);
+    this.gameFlow.startGameplay(initialStart);
   }
-
+  
   /**
    * Clears out all children nodes from a given display element
    * @param {String} display

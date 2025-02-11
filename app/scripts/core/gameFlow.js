@@ -313,6 +313,51 @@ class GameFlow {
       }
     }
   }
+
+  startGameplay(initialStart) {
+    if (initialStart) {
+      this.gameCoord.soundManager.play('game_start');
+    }
+
+    this.gameCoord.scaredGhosts = [];
+    this.gameCoord.eyeGhosts = 0;
+    this.gameCoord.allowPacmanMovement = false;
+
+    const left = this.gameCoord.scaledTileSize * 11;
+    const top = this.gameCoord.scaledTileSize * 16.5;
+    const duration = initialStart ? 4500 : 2000;
+    const width = this.gameCoord.scaledTileSize * 6;
+    const height = this.gameCoord.scaledTileSize * 2;
+
+    this.gameCoord.displayText({ left, top }, 'ready', duration, width, height);
+    this.gameCoord.updateExtraLivesDisplay();
+
+    new Timer(() => {
+      this.gameCoord.allowPause = true;
+      this.gameCoord.cutscene = false;
+      this.gameCoord.soundManager.setCutscene(this.gameCoord.cutscene);
+      this.gameCoord.soundManager.setAmbience(
+        this.gameCoord.determineSiren(this.gameCoord.remainingDots),
+      );
+
+      this.gameCoord.allowPacmanMovement = true;
+      this.gameCoord.pacman.moving = true;
+
+      this.gameCoord.ghosts.forEach((ghost) => {
+        const ghostRef = ghost;
+        ghostRef.moving = true;
+      });
+
+      this.gameCoord.ghostCycle('scatter');
+
+      this.gameCoord.idleGhosts = [
+        this.gameCoord.pinky,
+        this.gameCoord.inky,
+        this.gameCoord.clyde,
+      ];
+      this.gameCoord.releaseGhost();
+    }, duration);
+  }
 }
 
 // removeIf(production)

@@ -21,6 +21,7 @@ class GameCoordinator {
     // 实例化 GameUtilities
     this.gameUtilities = new GameUtilities(this);
     this.gameFlow = new GameFlow(this);
+    this.gamePlayer = new GamePlayer(this);
 
     this.mazeArray = GameUtilities.maze;
 
@@ -291,20 +292,7 @@ class GameCoordinator {
    * Pickups which are far away will not be considered for collision detection.
    */
   collisionDetectionLoop() {
-    if (this.pacman.position) {
-      const maxDistance = this.pacman.velocityPerMs * 750;
-      const pacmanCenter = {
-        x: this.pacman.position.left + this.scaledTileSize,
-        y: this.pacman.position.top + this.scaledTileSize,
-      };
-
-      // Set this flag to TRUE to see how two-phase collision detection works!
-      const debugging = false;
-
-      this.pickups.forEach((pickup) => {
-        pickup.checkPacmanProximity(maxDistance, pacmanCenter, debugging);
-      });
-    }
+    this.gamePlayer.collisionDetectionLoop();
   }
 
   /**
@@ -314,7 +302,7 @@ class GameCoordinator {
   startGameplay(initialStart) {
     this.gameFlow.startGameplay(initialStart);
   }
-  
+
   /**
    * Clears out all children nodes from a given display element
    * @param {String} display
@@ -364,16 +352,7 @@ class GameCoordinator {
    * @param {('chase'|'scatter')} mode
    */
   ghostCycle(mode) {
-    const delay = mode === 'scatter' ? 7000 : 20000;
-    const nextMode = mode === 'scatter' ? 'chase' : 'scatter';
-
-    this.ghostCycleTimer = new Timer(() => {
-      this.ghosts.forEach((ghost) => {
-        ghost.changeMode(nextMode);
-      });
-
-      this.ghostCycle(nextMode);
-    }, delay);
+    this.gamePlayer.ghostCycle(mode);
   }
 
   /**
@@ -533,7 +512,7 @@ class GameCoordinator {
    * the player has remaining lives.
    */
   deathSequence() {
-    this.gameFlow.deathSequence();
+    this.gamePlayer.deathSequence();
   }
 
   /**

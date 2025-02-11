@@ -20,40 +20,9 @@ class GameCoordinator {
 
     // 实例化 GameUtilities
     this.gameUtilities = new GameUtilities(this);
+    this.gameFlow = new GameFlow(this);
 
-    this.mazeArray = [
-      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
-      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
-      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
-      ['XooooooXXooooXXooooXXooooooX'],
-      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
-      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
-      ['XXXXXXoXX          XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XXXXXXoXX X      X XXoXXXXXX'],
-      ['      o   X      X   o      '],
-      ['XXXXXXoXX X      X XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XXXXXXoXX          XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XOooXXooooooo  oooooooXXooOX'],
-      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
-      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
-      ['XooooooXXooooXXooooXXooooooX'],
-      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
-      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
-      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
-    ];
+    this.mazeArray = GameUtilities.maze;
 
     this.maxFps = 120;
     this.tileSize = 8;
@@ -261,114 +230,7 @@ class GameCoordinator {
    * Resets gameCoordinator values to their default states
    */
   reset() {
-    this.activeTimers = [];
-    this.points = 0;
-    this.level = 1;
-    this.lives = 2;
-    this.extraLifeGiven = false;
-    this.remainingDots = 0;
-    this.allowKeyPresses = true;
-    this.allowPacmanMovement = false;
-    this.allowPause = false;
-    this.cutscene = true;
-    this.highScore = localStorage.getItem('highScore');
-
-    if (this.firstGame) {
-      setInterval(() => {
-        this.collisionDetectionLoop();
-      }, 500);
-
-      this.pacman = new Pacman(
-        this.scaledTileSize,
-        this.mazeArray,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.blinky = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'blinky',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.pinky = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'pinky',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.inky = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'inky',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-        this.blinky,
-      );
-      this.clyde = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'clyde',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.fruit = new Pickup(
-        'fruit',
-        this.scaledTileSize,
-        13.5,
-        17,
-        this.pacman,
-        this.mazeDiv,
-        100,
-      );
-    }
-
-    this.entityList = [
-      this.pacman,
-      this.blinky,
-      this.pinky,
-      this.inky,
-      this.clyde,
-      this.fruit,
-    ];
-
-    this.ghosts = [this.blinky, this.pinky, this.inky, this.clyde];
-
-    this.scaredGhosts = [];
-    this.eyeGhosts = 0;
-
-    if (this.firstGame) {
-      this.drawMaze(this.mazeArray, this.entityList);
-      this.soundManager = new SoundManager();
-      this.setUiDimensions();
-    } else {
-      this.pacman.reset();
-      this.ghosts.forEach((ghost) => {
-        ghost.reset(true);
-      });
-      this.pickups.forEach((pickup) => {
-        if (pickup.type !== 'fruit') {
-          this.remainingDots += 1;
-          pickup.reset();
-          this.entityList.push(pickup);
-        }
-      });
-    }
-
-    this.pointsDisplay.innerHTML = '00';
-    this.highScoreDisplay.innerHTML = this.highScore || '00';
-    this.clearDisplay(this.fruitDisplay);
-
-    const volumePreference = parseInt(
-      localStorage.getItem('volumePreference') || 1,
-      10,
-    );
-    this.setSoundButtonIcon(volumePreference);
-    this.soundManager.setMasterVolume(volumePreference);
+    this.gameFlow.reset();
   }
 
   /**
@@ -736,83 +598,14 @@ class GameCoordinator {
    * the player has remaining lives.
    */
   deathSequence() {
-    this.allowPause = false;
-    this.cutscene = true;
-    this.soundManager.setCutscene(this.cutscene);
-    this.soundManager.stopAmbience();
-    this.removeTimer({ detail: { timer: this.fruitTimer } });
-    this.removeTimer({ detail: { timer: this.ghostCycleTimer } });
-    this.removeTimer({ detail: { timer: this.endIdleTimer } });
-    this.removeTimer({ detail: { timer: this.ghostFlashTimer } });
-
-    this.allowKeyPresses = false;
-    this.pacman.moving = false;
-    this.ghosts.forEach((ghost) => {
-      const ghostRef = ghost;
-      ghostRef.moving = false;
-    });
-
-    new Timer(() => {
-      this.ghosts.forEach((ghost) => {
-        const ghostRef = ghost;
-        ghostRef.display = false;
-      });
-      this.pacman.prepDeathAnimation();
-      this.soundManager.play('death');
-
-      if (this.lives > 0) {
-        this.lives -= 1;
-
-        new Timer(() => {
-          this.mazeCover.style.visibility = 'visible';
-          new Timer(() => {
-            this.allowKeyPresses = true;
-            this.mazeCover.style.visibility = 'hidden';
-            this.pacman.reset();
-            this.ghosts.forEach((ghost) => {
-              ghost.reset();
-            });
-            this.fruit.hideFruit();
-
-            this.startGameplay();
-          }, 500);
-        }, 2250);
-      } else {
-        this.gameOver();
-      }
-    }, 750);
+    this.gameFlow.deathSequence();
   }
 
   /**
    * Displays GAME OVER text and displays the menu so players can play again
    */
   gameOver() {
-    localStorage.setItem('highScore', this.highScore);
-
-    new Timer(() => {
-      this.displayText(
-        {
-          left: this.scaledTileSize * 9,
-          top: this.scaledTileSize * 16.5,
-        },
-        'game_over',
-        4000,
-        this.scaledTileSize * 10,
-        this.scaledTileSize * 2,
-      );
-      this.fruit.hideFruit();
-
-      new Timer(() => {
-        this.leftCover.style.left = '0';
-        this.rightCover.style.right = '0';
-
-        setTimeout(() => {
-          this.mainMenu.style.opacity = 1;
-          this.gameStartButton.disabled = false;
-          this.mainMenu.style.visibility = 'visible';
-        }, 1000);
-      }, 2500);
-    }, 2250);
+    this.gameFlow.gameOver();
   }
 
   /**
@@ -881,73 +674,9 @@ class GameCoordinator {
    * Resets the gameboard and prepares the next level
    */
   advanceLevel() {
-    this.allowPause = false;
-    this.cutscene = true;
-    this.soundManager.setCutscene(this.cutscene);
-    this.allowKeyPresses = false;
-    this.soundManager.stopAmbience();
-
-    this.entityList.forEach((entity) => {
-      const entityRef = entity;
-      entityRef.moving = false;
-    });
-
-    this.removeTimer({ detail: { timer: this.fruitTimer } });
-    this.removeTimer({ detail: { timer: this.ghostCycleTimer } });
-    this.removeTimer({ detail: { timer: this.endIdleTimer } });
-    this.removeTimer({ detail: { timer: this.ghostFlashTimer } });
-
-    const imgBase = 'app/style//graphics/spriteSheets/maze/';
-
-    new Timer(() => {
-      this.ghosts.forEach((ghost) => {
-        const ghostRef = ghost;
-        ghostRef.display = false;
-      });
-
-      this.mazeImg.src = `${imgBase}maze_white.svg`;
-      new Timer(() => {
-        this.mazeImg.src = `${imgBase}maze_blue.svg`;
-        new Timer(() => {
-          this.mazeImg.src = `${imgBase}maze_white.svg`;
-          new Timer(() => {
-            this.mazeImg.src = `${imgBase}maze_blue.svg`;
-            new Timer(() => {
-              this.mazeImg.src = `${imgBase}maze_white.svg`;
-              new Timer(() => {
-                this.mazeImg.src = `${imgBase}maze_blue.svg`;
-                new Timer(() => {
-                  this.mazeCover.style.visibility = 'visible';
-                  new Timer(() => {
-                    this.mazeCover.style.visibility = 'hidden';
-                    this.level += 1;
-                    this.allowKeyPresses = true;
-                    this.entityList.forEach((entity) => {
-                      const entityRef = entity;
-                      if (entityRef.level) {
-                        entityRef.level = this.level;
-                      }
-                      entityRef.reset();
-                      if (entityRef instanceof Ghost) {
-                        entityRef.resetDefaultSpeed();
-                      }
-                      if (
-                        entityRef instanceof Pickup
-                        && entityRef.type !== 'fruit'
-                      ) {
-                        this.remainingDots += 1;
-                      }
-                    });
-                    this.startGameplay();
-                  }, 500);
-                }, 250);
-              }, 250);
-            }, 250);
-          }, 250);
-        }, 250);
-      }, 250);
-    }, 2000);
+    this.gameFlow.advanceLevel();
   }
+
 
   /**
    * Flashes ghosts blue and white to indicate the end of the powerup

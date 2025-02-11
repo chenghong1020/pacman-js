@@ -1128,39 +1128,11 @@ class GameCoordinator {
     this.pausedText = document.getElementById('paused-text');
     this.bottomRow = document.getElementById('bottom-row');
 
-    this.mazeArray = [
-      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
-      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
-      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
-      ['XooooooXXooooXXooooXXooooooX'],
-      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
-      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
-      ['XXXXXXoXX          XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XXXXXXoXX X      X XXoXXXXXX'],
-      ['      o   X      X   o      '],
-      ['XXXXXXoXX X      X XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XXXXXXoXX          XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XOooXXooooooo  oooooooXXooOX'],
-      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
-      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
-      ['XooooooXXooooXXooooXXooooooX'],
-      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
-      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
-      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
-    ];
+    // 实例化 GameUtilities
+    this.gameUtilities = new GameUtilities(this);
+    this.gameFlow = new GameFlow(this);
+
+    this.mazeArray = GameUtilities.maze;
 
     this.maxFps = 120;
     this.tileSize = 8;
@@ -1306,148 +1278,8 @@ class GameCoordinator {
     }, 1500);
   }
 
-  /**
-   * Load all assets into a hidden Div to pre-load them into memory.
-   * There is probably a better way to read all of these file names.
-   */
   preloadAssets() {
-    return new Promise((resolve) => {
-      const loadingContainer = document.getElementById('loading-container');
-      const loadingPacman = document.getElementById('loading-pacman');
-      const loadingDotMask = document.getElementById('loading-dot-mask');
-
-      const imgBase = 'app/style/graphics/spriteSheets/';
-      const imgSources = [
-        // Pacman
-        `${imgBase}characters/pacman/arrow_down.svg`,
-        `${imgBase}characters/pacman/arrow_left.svg`,
-        `${imgBase}characters/pacman/arrow_right.svg`,
-        `${imgBase}characters/pacman/arrow_up.svg`,
-        `${imgBase}characters/pacman/pacman_death.svg`,
-        `${imgBase}characters/pacman/pacman_error.svg`,
-        `${imgBase}characters/pacman/pacman_down.svg`,
-        `${imgBase}characters/pacman/pacman_left.svg`,
-        `${imgBase}characters/pacman/pacman_right.svg`,
-        `${imgBase}characters/pacman/pacman_up.svg`,
-
-        // Blinky
-        `${imgBase}characters/ghosts/blinky/blinky_down_angry.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_down_annoyed.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_down.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_left_angry.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_left_annoyed.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_left.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_right_angry.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_right_annoyed.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_right.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_up_angry.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_up_annoyed.svg`,
-        `${imgBase}characters/ghosts/blinky/blinky_up.svg`,
-
-        // Clyde
-        `${imgBase}characters/ghosts/clyde/clyde_down.svg`,
-        `${imgBase}characters/ghosts/clyde/clyde_left.svg`,
-        `${imgBase}characters/ghosts/clyde/clyde_right.svg`,
-        `${imgBase}characters/ghosts/clyde/clyde_up.svg`,
-
-        // Inky
-        `${imgBase}characters/ghosts/inky/inky_down.svg`,
-        `${imgBase}characters/ghosts/inky/inky_left.svg`,
-        `${imgBase}characters/ghosts/inky/inky_right.svg`,
-        `${imgBase}characters/ghosts/inky/inky_up.svg`,
-
-        // Pinky
-        `${imgBase}characters/ghosts/pinky/pinky_down.svg`,
-        `${imgBase}characters/ghosts/pinky/pinky_left.svg`,
-        `${imgBase}characters/ghosts/pinky/pinky_right.svg`,
-        `${imgBase}characters/ghosts/pinky/pinky_up.svg`,
-
-        // Ghosts Common
-        `${imgBase}characters/ghosts/eyes_down.svg`,
-        `${imgBase}characters/ghosts/eyes_left.svg`,
-        `${imgBase}characters/ghosts/eyes_right.svg`,
-        `${imgBase}characters/ghosts/eyes_up.svg`,
-        `${imgBase}characters/ghosts/scared_blue.svg`,
-        `${imgBase}characters/ghosts/scared_white.svg`,
-
-        // Dots
-        `${imgBase}pickups/pacdot.svg`,
-        `${imgBase}pickups/powerPellet.svg`,
-
-        // Fruit
-        `${imgBase}pickups/apple.svg`,
-        `${imgBase}pickups/bell.svg`,
-        `${imgBase}pickups/cherry.svg`,
-        `${imgBase}pickups/galaxian.svg`,
-        `${imgBase}pickups/key.svg`,
-        `${imgBase}pickups/melon.svg`,
-        `${imgBase}pickups/orange.svg`,
-        `${imgBase}pickups/strawberry.svg`,
-
-        // Text
-        `${imgBase}text/ready.svg`,
-
-        // Points
-        `${imgBase}text/100.svg`,
-        `${imgBase}text/200.svg`,
-        `${imgBase}text/300.svg`,
-        `${imgBase}text/400.svg`,
-        `${imgBase}text/500.svg`,
-        `${imgBase}text/700.svg`,
-        `${imgBase}text/800.svg`,
-        `${imgBase}text/1000.svg`,
-        `${imgBase}text/1600.svg`,
-        `${imgBase}text/2000.svg`,
-        `${imgBase}text/3000.svg`,
-        `${imgBase}text/5000.svg`,
-
-        // Maze
-        `${imgBase}maze/maze_blue.svg`,
-
-        // Misc
-        'app/style/graphics/extra_life.svg',
-      ];
-
-      const audioBase = 'app/style/audio/';
-      const audioSources = [
-        `${audioBase}game_start.mp3`,
-        `${audioBase}pause.mp3`,
-        `${audioBase}pause_beat.mp3`,
-        `${audioBase}siren_1.mp3`,
-        `${audioBase}siren_2.mp3`,
-        `${audioBase}siren_3.mp3`,
-        `${audioBase}power_up.mp3`,
-        `${audioBase}extra_life.mp3`,
-        `${audioBase}eyes.mp3`,
-        `${audioBase}eat_ghost.mp3`,
-        `${audioBase}death.mp3`,
-        `${audioBase}fruit.mp3`,
-        `${audioBase}dot_1.mp3`,
-        `${audioBase}dot_2.mp3`,
-      ];
-
-      const totalSources = imgSources.length + audioSources.length;
-      this.remainingSources = totalSources;
-
-      loadingPacman.style.left = '0';
-      loadingDotMask.style.width = '0';
-
-      Promise.all([
-        this.createElements(imgSources, 'img', totalSources, this),
-        this.createElements(audioSources, 'audio', totalSources, this),
-      ])
-        .then(() => {
-          loadingContainer.style.opacity = 0;
-          resolve();
-
-          setTimeout(() => {
-            loadingContainer.remove();
-            this.mainMenu.style.opacity = 1;
-            this.mainMenu.style.visibility = 'visible';
-          }, 1500);
-        })
-        .catch(this.displayErrorMessage);
-    });
+    this.gameUtilities.preloadAssets();
   }
 
   /**
@@ -1508,114 +1340,7 @@ class GameCoordinator {
    * Resets gameCoordinator values to their default states
    */
   reset() {
-    this.activeTimers = [];
-    this.points = 0;
-    this.level = 1;
-    this.lives = 2;
-    this.extraLifeGiven = false;
-    this.remainingDots = 0;
-    this.allowKeyPresses = true;
-    this.allowPacmanMovement = false;
-    this.allowPause = false;
-    this.cutscene = true;
-    this.highScore = localStorage.getItem('highScore');
-
-    if (this.firstGame) {
-      setInterval(() => {
-        this.collisionDetectionLoop();
-      }, 500);
-
-      this.pacman = new Pacman(
-        this.scaledTileSize,
-        this.mazeArray,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.blinky = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'blinky',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.pinky = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'pinky',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.inky = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'inky',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-        this.blinky,
-      );
-      this.clyde = new Ghost(
-        this.scaledTileSize,
-        this.mazeArray,
-        this.pacman,
-        'clyde',
-        this.level,
-        new CharacterUtil(this.scaledTileSize),
-      );
-      this.fruit = new Pickup(
-        'fruit',
-        this.scaledTileSize,
-        13.5,
-        17,
-        this.pacman,
-        this.mazeDiv,
-        100,
-      );
-    }
-
-    this.entityList = [
-      this.pacman,
-      this.blinky,
-      this.pinky,
-      this.inky,
-      this.clyde,
-      this.fruit,
-    ];
-
-    this.ghosts = [this.blinky, this.pinky, this.inky, this.clyde];
-
-    this.scaredGhosts = [];
-    this.eyeGhosts = 0;
-
-    if (this.firstGame) {
-      this.drawMaze(this.mazeArray, this.entityList);
-      this.soundManager = new SoundManager();
-      this.setUiDimensions();
-    } else {
-      this.pacman.reset();
-      this.ghosts.forEach((ghost) => {
-        ghost.reset(true);
-      });
-      this.pickups.forEach((pickup) => {
-        if (pickup.type !== 'fruit') {
-          this.remainingDots += 1;
-          pickup.reset();
-          this.entityList.push(pickup);
-        }
-      });
-    }
-
-    this.pointsDisplay.innerHTML = '00';
-    this.highScoreDisplay.innerHTML = this.highScore || '00';
-    this.clearDisplay(this.fruitDisplay);
-
-    const volumePreference = parseInt(
-      localStorage.getItem('volumePreference') || 1,
-      10,
-    );
-    this.setSoundButtonIcon(volumePreference);
-    this.soundManager.setMasterVolume(volumePreference);
+    this.gameFlow.reset();
   }
 
   /**
@@ -1983,83 +1708,14 @@ class GameCoordinator {
    * the player has remaining lives.
    */
   deathSequence() {
-    this.allowPause = false;
-    this.cutscene = true;
-    this.soundManager.setCutscene(this.cutscene);
-    this.soundManager.stopAmbience();
-    this.removeTimer({ detail: { timer: this.fruitTimer } });
-    this.removeTimer({ detail: { timer: this.ghostCycleTimer } });
-    this.removeTimer({ detail: { timer: this.endIdleTimer } });
-    this.removeTimer({ detail: { timer: this.ghostFlashTimer } });
-
-    this.allowKeyPresses = false;
-    this.pacman.moving = false;
-    this.ghosts.forEach((ghost) => {
-      const ghostRef = ghost;
-      ghostRef.moving = false;
-    });
-
-    new Timer(() => {
-      this.ghosts.forEach((ghost) => {
-        const ghostRef = ghost;
-        ghostRef.display = false;
-      });
-      this.pacman.prepDeathAnimation();
-      this.soundManager.play('death');
-
-      if (this.lives > 0) {
-        this.lives -= 1;
-
-        new Timer(() => {
-          this.mazeCover.style.visibility = 'visible';
-          new Timer(() => {
-            this.allowKeyPresses = true;
-            this.mazeCover.style.visibility = 'hidden';
-            this.pacman.reset();
-            this.ghosts.forEach((ghost) => {
-              ghost.reset();
-            });
-            this.fruit.hideFruit();
-
-            this.startGameplay();
-          }, 500);
-        }, 2250);
-      } else {
-        this.gameOver();
-      }
-    }, 750);
+    this.gameFlow.deathSequence();
   }
 
   /**
    * Displays GAME OVER text and displays the menu so players can play again
    */
   gameOver() {
-    localStorage.setItem('highScore', this.highScore);
-
-    new Timer(() => {
-      this.displayText(
-        {
-          left: this.scaledTileSize * 9,
-          top: this.scaledTileSize * 16.5,
-        },
-        'game_over',
-        4000,
-        this.scaledTileSize * 10,
-        this.scaledTileSize * 2,
-      );
-      this.fruit.hideFruit();
-
-      new Timer(() => {
-        this.leftCover.style.left = '0';
-        this.rightCover.style.right = '0';
-
-        setTimeout(() => {
-          this.mainMenu.style.opacity = 1;
-          this.gameStartButton.disabled = false;
-          this.mainMenu.style.visibility = 'visible';
-        }, 1000);
-      }, 2500);
-    }, 2250);
+    this.gameFlow.gameOver();
   }
 
   /**
@@ -2128,73 +1784,9 @@ class GameCoordinator {
    * Resets the gameboard and prepares the next level
    */
   advanceLevel() {
-    this.allowPause = false;
-    this.cutscene = true;
-    this.soundManager.setCutscene(this.cutscene);
-    this.allowKeyPresses = false;
-    this.soundManager.stopAmbience();
-
-    this.entityList.forEach((entity) => {
-      const entityRef = entity;
-      entityRef.moving = false;
-    });
-
-    this.removeTimer({ detail: { timer: this.fruitTimer } });
-    this.removeTimer({ detail: { timer: this.ghostCycleTimer } });
-    this.removeTimer({ detail: { timer: this.endIdleTimer } });
-    this.removeTimer({ detail: { timer: this.ghostFlashTimer } });
-
-    const imgBase = 'app/style//graphics/spriteSheets/maze/';
-
-    new Timer(() => {
-      this.ghosts.forEach((ghost) => {
-        const ghostRef = ghost;
-        ghostRef.display = false;
-      });
-
-      this.mazeImg.src = `${imgBase}maze_white.svg`;
-      new Timer(() => {
-        this.mazeImg.src = `${imgBase}maze_blue.svg`;
-        new Timer(() => {
-          this.mazeImg.src = `${imgBase}maze_white.svg`;
-          new Timer(() => {
-            this.mazeImg.src = `${imgBase}maze_blue.svg`;
-            new Timer(() => {
-              this.mazeImg.src = `${imgBase}maze_white.svg`;
-              new Timer(() => {
-                this.mazeImg.src = `${imgBase}maze_blue.svg`;
-                new Timer(() => {
-                  this.mazeCover.style.visibility = 'visible';
-                  new Timer(() => {
-                    this.mazeCover.style.visibility = 'hidden';
-                    this.level += 1;
-                    this.allowKeyPresses = true;
-                    this.entityList.forEach((entity) => {
-                      const entityRef = entity;
-                      if (entityRef.level) {
-                        entityRef.level = this.level;
-                      }
-                      entityRef.reset();
-                      if (entityRef instanceof Ghost) {
-                        entityRef.resetDefaultSpeed();
-                      }
-                      if (
-                        entityRef instanceof Pickup
-                        && entityRef.type !== 'fruit'
-                      ) {
-                        this.remainingDots += 1;
-                      }
-                    });
-                    this.startGameplay();
-                  }, 500);
-                }, 250);
-              }, 250);
-            }, 250);
-          }, 250);
-        }, 250);
-      }, 250);
-    }, 2000);
+    this.gameFlow.advanceLevel();
   }
+
 
   /**
    * Flashes ghosts blue and white to indicate the end of the powerup
@@ -2567,6 +2159,485 @@ class GameEngine {
    */
   mainLoop(timestamp) {
     this.engineCycle(timestamp);
+  }
+}
+
+
+class GameFlow {
+  /**
+   * Reference to the GameCoordinator instance.
+   * @type {Object}
+   */
+  constructor(gameCoord) {
+    this.gameCoord = gameCoord;
+  }
+
+  reset() {
+    this.gameCoord.activeTimers = [];
+    this.gameCoord.points = 0;
+    this.gameCoord.level = 1;
+    this.gameCoord.lives = 2;
+    this.gameCoord.extraLifeGiven = false;
+    this.gameCoord.remainingDots = 0;
+    this.gameCoord.allowKeyPresses = true;
+    this.gameCoord.allowPacmanMovement = false;
+    this.gameCoord.allowPause = false;
+    this.gameCoord.cutscene = true;
+    this.gameCoord.highScore = localStorage.getItem('highScore');
+
+    if (this.gameCoord.firstGame) {
+      setInterval(() => {
+        this.gameCoord.collisionDetectionLoop();
+      }, 500);
+
+      this.gameCoord.pacman = new Pacman(
+        this.gameCoord.scaledTileSize,
+        this.gameCoord.mazeArray,
+        new CharacterUtil(this.gameCoord.scaledTileSize),
+      );
+      this.gameCoord.blinky = new Ghost(
+        this.gameCoord.scaledTileSize,
+        this.gameCoord.mazeArray,
+        this.gameCoord.pacman,
+        'blinky',
+        this.gameCoord.level,
+        new CharacterUtil(this.gameCoord.scaledTileSize),
+      );
+      this.gameCoord.pinky = new Ghost(
+        this.gameCoord.scaledTileSize,
+        this.gameCoord.mazeArray,
+        this.gameCoord.pacman,
+        'pinky',
+        this.gameCoord.level,
+        new CharacterUtil(this.gameCoord.scaledTileSize),
+      );
+      this.gameCoord.inky = new Ghost(
+        this.gameCoord.scaledTileSize,
+        this.gameCoord.mazeArray,
+        this.gameCoord.pacman,
+        'inky',
+        this.gameCoord.level,
+        new CharacterUtil(this.gameCoord.scaledTileSize),
+        this.gameCoord.blinky,
+      );
+      this.gameCoord.clyde = new Ghost(
+        this.gameCoord.scaledTileSize,
+        this.gameCoord.mazeArray,
+        this.gameCoord.pacman,
+        'clyde',
+        this.gameCoord.level,
+        new CharacterUtil(this.gameCoord.scaledTileSize),
+      );
+      this.gameCoord.fruit = new Pickup(
+        'fruit',
+        this.gameCoord.scaledTileSize,
+        13.5,
+        17,
+        this.gameCoord.pacman,
+        this.gameCoord.mazeDiv,
+        100,
+      );
+    }
+
+    this.gameCoord.entityList = [
+      this.gameCoord.pacman,
+      this.gameCoord.blinky,
+      this.gameCoord.pinky,
+      this.gameCoord.inky,
+      this.gameCoord.clyde,
+      this.gameCoord.fruit,
+    ];
+
+    this.gameCoord.ghosts = [
+      this.gameCoord.blinky,
+      this.gameCoord.pinky,
+      this.gameCoord.inky,
+      this.gameCoord.clyde,
+    ];
+
+    this.gameCoord.scaredGhosts = [];
+    this.gameCoord.eyeGhosts = 0;
+
+    if (this.gameCoord.firstGame) {
+      this.gameCoord.drawMaze(this.gameCoord.mazeArray,
+        this.gameCoord.entityList);
+      this.gameCoord.soundManager = new SoundManager();
+      this.gameCoord.setUiDimensions();
+    } else {
+      this.gameCoord.pacman.reset();
+      this.gameCoord.ghosts.forEach((ghost) => {
+        ghost.reset(true);
+      });
+      this.gameCoord.pickups.forEach((pickup) => {
+        if (pickup.type !== 'fruit') {
+          this.gameCoord.remainingDots += 1;
+          pickup.reset();
+          this.gameCoord.entityList.push(pickup);
+        }
+      });
+    }
+
+    this.gameCoord.pointsDisplay.innerHTML = '00';
+    this.gameCoord.highScoreDisplay.innerHTML = this.gameCoord.highScore
+      || '00';
+    this.gameCoord.clearDisplay(this.gameCoord.fruitDisplay);
+
+    const volumePreference = parseInt(
+      localStorage.getItem('volumePreference') || 1,
+      10,
+    );
+    this.gameCoord.setSoundButtonIcon(volumePreference);
+    this.gameCoord.soundManager.setMasterVolume(volumePreference);
+  }
+
+  deathSequence() {
+    this.gameCoord.allowPause = false;
+    this.gameCoord.cutscene = true;
+    this.gameCoord.soundManager.setCutscene(this.gameCoord.cutscene);
+    this.gameCoord.soundManager.stopAmbience();
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.fruitTimer } });
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.ghostCycleTimer } });
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.endIdleTimer } });
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.ghostFlashTimer } });
+
+    this.gameCoord.allowKeyPresses = false;
+    this.gameCoord.pacman.moving = false;
+    this.gameCoord.ghosts.forEach((ghost) => {
+      const ghostRef = ghost;
+      ghostRef.moving = false;
+    });
+
+    new Timer(() => {
+      this.gameCoord.ghosts.forEach((ghost) => {
+        const ghostRef = ghost;
+        ghostRef.display = false;
+      });
+      this.gameCoord.pacman.prepDeathAnimation();
+      this.gameCoord.soundManager.play('death');
+
+      if (this.gameCoord.lives > 0) {
+        this.gameCoord.lives -= 1;
+
+        new Timer(() => {
+          this.gameCoord.mazeCover.style.visibility = 'visible';
+          new Timer(() => {
+            this.gameCoord.allowKeyPresses = true;
+            this.gameCoord.mazeCover.style.visibility = 'hidden';
+            this.gameCoord.pacman.reset();
+            this.gameCoord.ghosts.forEach((ghost) => {
+              ghost.reset();
+            });
+            this.gameCoord.fruit.hideFruit();
+
+            this.gameCoord.startGameplay();
+          }, 500);
+        }, 2250);
+      } else {
+        this.gameCoord.gameOver();
+      }
+    }, 750);
+  }
+
+  gameOver() {
+    localStorage.setItem('highScore', this.gameCoord.highScore);
+
+    new Timer(() => {
+      this.gameCoord.displayText(
+        {
+          left: this.gameCoord.scaledTileSize * 9,
+          top: this.gameCoord.scaledTileSize * 16.5,
+        },
+        'game_over',
+        4000,
+        this.gameCoord.scaledTileSize * 10,
+        this.gameCoord.scaledTileSize * 2,
+      );
+      this.gameCoord.fruit.hideFruit();
+
+      new Timer(() => {
+        this.gameCoord.leftCover.style.left = '0';
+        this.gameCoord.rightCover.style.right = '0';
+
+        setTimeout(() => {
+          this.gameCoord.mainMenu.style.opacity = 1;
+          this.gameCoord.gameStartButton.disabled = false;
+          this.gameCoord.mainMenu.style.visibility = 'visible';
+        }, 1000);
+      }, 2500);
+    }, 2250);
+  }
+
+  advanceLevel() {
+    this.gameCoord.allowPause = false;
+    this.gameCoord.cutscene = true;
+    this.gameCoord.soundManager.setCutscene(this.gameCoord.cutscene);
+    this.gameCoord.allowKeyPresses = false;
+    this.gameCoord.soundManager.stopAmbience();
+
+    this.gameCoord.entityList.forEach((entity) => {
+      const entityRef = entity;
+      entityRef.moving = false;
+    });
+
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.fruitTimer } });
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.ghostCycleTimer } });
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.endIdleTimer } });
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.ghostFlashTimer } });
+
+    const imgBase = 'app/style//graphics/spriteSheets/maze/';
+
+    new Timer(() => {
+      this.gameCoord.ghosts.forEach((ghost) => {
+        const ghostRef = ghost;
+        ghostRef.display = false;
+      });
+
+      this.gameCoord.mazeImg.src = `${imgBase}maze_white.svg`;
+      new Timer(() => {
+        this.gameCoord.mazeImg.src = `${imgBase}maze_blue.svg`;
+        new Timer(() => {
+          this.gameCoord.mazeImg.src = `${imgBase}maze_white.svg`;
+          new Timer(() => {
+            this.gameCoord.mazeImg.src = `${imgBase}maze_blue.svg`;
+            new Timer(() => {
+              this.gameCoord.mazeImg.src = `${imgBase}maze_white.svg`;
+              new Timer(() => {
+                this.gameCoord.mazeImg.src = `${imgBase}maze_blue.svg`;
+                new Timer(() => {
+                  this.gameCoord.mazeCover.style.visibility = 'visible';
+                  new Timer(() => {
+                    this.gameCoord.mazeCover.style.visibility = 'hidden';
+                    this.gameCoord.level += 1;
+                    this.gameCoord.allowKeyPresses = true;
+                    this.gameCoord.entityList.forEach((entity) => {
+                      const entityRef = entity;
+                      if (entityRef.level) {
+                        entityRef.level = this.gameCoord.level;
+                      }
+                      entityRef.reset();
+                      if (entityRef instanceof Ghost) {
+                        entityRef.resetDefaultSpeed();
+                      }
+                      if (
+                        entityRef instanceof Pickup
+                        && entityRef.type !== 'fruit'
+                      ) {
+                        this.gameCoord.remainingDots += 1;
+                      }
+                    });
+                    this.gameCoord.startGameplay();
+                  }, 500);
+                }, 250);
+              }, 250);
+            }, 250);
+          }, 250);
+        }, 250);
+      }, 250);
+    }, 2000);
+  }
+}
+
+
+class GameUtilities {
+  /**
+   * Reference to the GameCoordinator instance.
+   * @type {Object}
+   */
+  constructor(gameCoord) {
+    this.gameCoord = gameCoord;
+  }
+
+  /**
+   * Load all assets into a hidden Div to pre-load them into memory.
+   * There is probably a better way to read all of these file names.
+   */
+  preloadAssets() {
+    return new Promise((resolve) => {
+      const loadingContainer = document.getElementById('loading-container');
+      const loadingPacman = document.getElementById('loading-pacman');
+      const loadingDotMask = document.getElementById('loading-dot-mask');
+
+      const imgBase = 'app/style/graphics/spriteSheets/';
+      const imgSources = [
+        // Pacman
+        `${imgBase}characters/pacman/arrow_down.svg`,
+        `${imgBase}characters/pacman/arrow_left.svg`,
+        `${imgBase}characters/pacman/arrow_right.svg`,
+        `${imgBase}characters/pacman/arrow_up.svg`,
+        `${imgBase}characters/pacman/pacman_death.svg`,
+        `${imgBase}characters/pacman/pacman_error.svg`,
+        `${imgBase}characters/pacman/pacman_down.svg`,
+        `${imgBase}characters/pacman/pacman_left.svg`,
+        `${imgBase}characters/pacman/pacman_right.svg`,
+        `${imgBase}characters/pacman/pacman_up.svg`,
+
+        // Blinky
+        `${imgBase}characters/ghosts/blinky/blinky_down_angry.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_down_annoyed.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_down.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_left_angry.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_left_annoyed.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_left.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_right_angry.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_right_annoyed.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_right.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_up_angry.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_up_annoyed.svg`,
+        `${imgBase}characters/ghosts/blinky/blinky_up.svg`,
+
+        // Clyde
+        `${imgBase}characters/ghosts/clyde/clyde_down.svg`,
+        `${imgBase}characters/ghosts/clyde/clyde_left.svg`,
+        `${imgBase}characters/ghosts/clyde/clyde_right.svg`,
+        `${imgBase}characters/ghosts/clyde/clyde_up.svg`,
+
+        // Inky
+        `${imgBase}characters/ghosts/inky/inky_down.svg`,
+        `${imgBase}characters/ghosts/inky/inky_left.svg`,
+        `${imgBase}characters/ghosts/inky/inky_right.svg`,
+        `${imgBase}characters/ghosts/inky/inky_up.svg`,
+
+        // Pinky
+        `${imgBase}characters/ghosts/pinky/pinky_down.svg`,
+        `${imgBase}characters/ghosts/pinky/pinky_left.svg`,
+        `${imgBase}characters/ghosts/pinky/pinky_right.svg`,
+        `${imgBase}characters/ghosts/pinky/pinky_up.svg`,
+
+        // Ghosts Common
+        `${imgBase}characters/ghosts/eyes_down.svg`,
+        `${imgBase}characters/ghosts/eyes_left.svg`,
+        `${imgBase}characters/ghosts/eyes_right.svg`,
+        `${imgBase}characters/ghosts/eyes_up.svg`,
+        `${imgBase}characters/ghosts/scared_blue.svg`,
+        `${imgBase}characters/ghosts/scared_white.svg`,
+
+        // Dots
+        `${imgBase}pickups/pacdot.svg`,
+        `${imgBase}pickups/powerPellet.svg`,
+
+        // Fruit
+        `${imgBase}pickups/apple.svg`,
+        `${imgBase}pickups/bell.svg`,
+        `${imgBase}pickups/cherry.svg`,
+        `${imgBase}pickups/galaxian.svg`,
+        `${imgBase}pickups/key.svg`,
+        `${imgBase}pickups/melon.svg`,
+        `${imgBase}pickups/orange.svg`,
+        `${imgBase}pickups/strawberry.svg`,
+
+        // Text
+        `${imgBase}text/ready.svg`,
+
+        // Points
+        `${imgBase}text/100.svg`,
+        `${imgBase}text/200.svg`,
+        `${imgBase}text/300.svg`,
+        `${imgBase}text/400.svg`,
+        `${imgBase}text/500.svg`,
+        `${imgBase}text/700.svg`,
+        `${imgBase}text/800.svg`,
+        `${imgBase}text/1000.svg`,
+        `${imgBase}text/1600.svg`,
+        `${imgBase}text/2000.svg`,
+        `${imgBase}text/3000.svg`,
+        `${imgBase}text/5000.svg`,
+
+        // Maze
+        `${imgBase}maze/maze_blue.svg`,
+
+        // Misc
+        'app/style/graphics/extra_life.svg',
+      ];
+
+      const audioBase = 'app/style/audio/';
+      const audioSources = [
+        `${audioBase}game_start.mp3`,
+        `${audioBase}pause.mp3`,
+        `${audioBase}pause_beat.mp3`,
+        `${audioBase}siren_1.mp3`,
+        `${audioBase}siren_2.mp3`,
+        `${audioBase}siren_3.mp3`,
+        `${audioBase}power_up.mp3`,
+        `${audioBase}extra_life.mp3`,
+        `${audioBase}eyes.mp3`,
+        `${audioBase}eat_ghost.mp3`,
+        `${audioBase}death.mp3`,
+        `${audioBase}fruit.mp3`,
+        `${audioBase}dot_1.mp3`,
+        `${audioBase}dot_2.mp3`,
+      ];
+
+      const totalSources = imgSources.length + audioSources.length;
+      this.gameCoord.remainingSources = totalSources;
+
+      loadingPacman.style.left = '0';
+      loadingDotMask.style.width = '0';
+
+      Promise.all([
+        this.gameCoord.createElements(imgSources, 'img', totalSources, this),
+        this.gameCoord.createElements(
+          audioSources,
+          'audio',
+          totalSources,
+          this,
+        ),
+      ])
+        .then(() => {
+          loadingContainer.style.opacity = 0;
+          resolve();
+
+          setTimeout(() => {
+            loadingContainer.remove();
+            this.gameCoord.mainMenu.style.opacity = 1;
+            this.gameCoord.mainMenu.style.visibility = 'visible';
+          }, 1500);
+        })
+        .catch(this.gameCoord.displayErrorMessage);
+    });
+  }
+
+  static get maze() {
+    return [
+      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
+      ['XooooooooooooXXooooooooooooX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XooooooooooooooooooooooooooX'],
+      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
+      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
+      ['XooooooXXooooXXooooXXooooooX'],
+      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
+      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
+      ['XXXXXXoXX          XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XXXXXXoXX X      X XXoXXXXXX'],
+      ['      o   X      X   o      '],
+      ['XXXXXXoXX X      X XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XXXXXXoXX          XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XooooooooooooXXooooooooooooX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XOooXXooooooo  oooooooXXooOX'],
+      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
+      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
+      ['XooooooXXooooXXooooXXooooooX'],
+      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
+      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
+      ['XooooooooooooooooooooooooooX'],
+      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
+    ];
   }
 }
 

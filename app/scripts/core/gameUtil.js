@@ -155,6 +155,42 @@ class GameUtilities {
         .catch(this.gameCoord.displayErrorMessage);
     });
   }
+
+  static get maze() {
+    return [
+      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
+      ['XooooooooooooXXooooooooooooX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XooooooooooooooooooooooooooX'],
+      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
+      ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
+      ['XooooooXXooooXXooooXXooooooX'],
+      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
+      ['XXXXXXoXXXXX XX XXXXXoXXXXXX'],
+      ['XXXXXXoXX          XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XXXXXXoXX X      X XXoXXXXXX'],
+      ['      o   X      X   o      '],
+      ['XXXXXXoXX X      X XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XXXXXXoXX          XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
+      ['XooooooooooooXXooooooooooooX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
+      ['XOooXXooooooo  oooooooXXooOX'],
+      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
+      ['XXXoXXoXXoXXXXXXXXoXXoXXoXXX'],
+      ['XooooooXXooooXXooooXXooooooX'],
+      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
+      ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
+      ['XooooooooooooooooooooooooooX'],
+      ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
+    ];
+  }
 }
 
 // removeIf(production)

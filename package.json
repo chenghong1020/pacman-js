@@ -10,7 +10,7 @@
     "coverage": "nyc report --reporter=text-lcov | node ./node_modules/coveralls/bin/coveralls.js",
     "lint": "./node_modules/.bin/eslint .",
     "update": "ncu -i --format group",
-    "serve": "node ./node_modules/http-server/bin/http-server",
+    "serve": "node ./node_modules/http-server/bin/http-server -c-1",
     "watch": "gulp watch",
     "prepare": "husky"
   },

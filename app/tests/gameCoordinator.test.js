@@ -1,6 +1,9 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const GameCoordinator = require('../scripts/core/gameCoordinator');
+const GameUtilities = require('../scripts/core/gameUtil'); // 导入 GameUtilities
+const GameFlow = require('../scripts/core/gameFlow'); // 导入 GameUtilities
+const GamePlayer = require('../scripts/core/gamePlayer'); // 导入 GameUtilities
 
 let comp;
 const mazeArray = [
@@ -12,6 +15,9 @@ let clock;
 
 describe('gameCoordinator', () => {
   beforeEach(() => {
+    global.GameUtilities = GameUtilities; // 挂载到全局对象
+    global.GameFlow = GameFlow; // 挂载到全局对象
+    global.GamePlayer = GamePlayer; // 挂载到全局对象
     global.Pacman = class {
       reset() {}
     };

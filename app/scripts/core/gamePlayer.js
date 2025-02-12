@@ -88,6 +88,207 @@ class GamePlayer {
       this.ghostCycle(nextMode);
     }, delay);
   }
+
+  releaseGhost() {
+    if (this.gameCoord.idleGhosts.length > 0) {
+      const delay = Math.max((8 - (this.gameCoord.level - 1) * 4) * 1000, 0);
+
+      this.gameCoord.endIdleTimer = new Timer(() => {
+        this.gameCoord.idleGhosts[0].endIdleMode();
+        this.gameCoord.idleGhosts.shift();
+      }, delay);
+    }
+  }
+
+  awardPoints(e) {
+    this.gameCoord.points += e.detail.points;
+    this.gameCoord.pointsDisplay.innerText = this.gameCoord.points;
+    if (this.gameCoord.points > (this.gameCoord.highScore || 0)) {
+      this.gameCoord.highScore = this.gameCoord.points;
+      this.gameCoord.highScoreDisplay.innerText = this.gameCoord.points;
+      localStorage.setItem('highScore', this.gameCoord.highScore);
+    }
+
+    if (this.gameCoord.points >= 10000 && !this.gameCoord.extraLifeGiven) {
+      this.gameCoord.extraLifeGiven = true;
+      this.gameCoord.soundManager.play('extra_life');
+      this.gameCoord.lives += 1;
+      this.gameCoord.updateExtraLivesDisplay();
+    }
+
+    if (e.detail.type === 'fruit') {
+      const left = e.detail.points >= 1000
+        ? this.gameCoord.scaledTileSize * 12.5
+        : this.gameCoord.scaledTileSize * 13;
+      const top = this.gameCoord.scaledTileSize * 16.5;
+      const width = e.detail.points >= 1000
+        ? this.gameCoord.scaledTileSize * 3
+        : this.gameCoord.scaledTileSize * 2;
+      const height = this.gameCoord.scaledTileSize * 2;
+
+      this.gameCoord
+        .displayText({ left, top }, e.detail.points, 2000, width, height);
+      this.gameCoord.soundManager.play('fruit');
+      this.gameCoord.updateFruitDisplay(
+        this.gameCoord.fruit.determineImage('fruit', e.detail.points),
+      );
+    }
+  }
+
+  dotEaten() {
+    this.gameCoord.remainingDots -= 1;
+
+    this.gameCoord.soundManager.playDotSound();
+
+    if (this.gameCoord.remainingDots === 174
+        || this.gameCoord.remainingDots === 74) {
+      this.gameCoord.createFruit();
+    }
+
+    if (this.gameCoord.remainingDots === 40
+        || this.gameCoord.remainingDots === 20) {
+      this.gameCoord.speedUpBlinky();
+    }
+
+    if (this.gameCoord.remainingDots === 0) {
+      this.gameCoord.advanceLevel();
+    }
+  }
+
+  createFruit() {
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.fruitTimer } });
+    this.gameCoord
+      .fruit.showFruit(this.gameCoord.fruitPoints[this.gameCoord.level]
+        || 5000);
+    this.gameCoord.fruitTimer = new Timer(() => {
+      this.gameCoord.fruit.hideFruit();
+    }, 10000);
+  }
+
+  flashGhosts(flashes, maxFlashes) {
+    if (flashes === maxFlashes) {
+      this.gameCoord.scaredGhosts.forEach((ghost) => {
+        ghost.endScared();
+      });
+      this.gameCoord.scaredGhosts = [];
+      if (this.gameCoord.eyeGhosts === 0) {
+        this.gameCoord.soundManager.setAmbience(
+          this.gameCoord.determineSiren(this.gameCoord.remainingDots),
+        );
+      }
+    } else if (this.gameCoord.scaredGhosts.length > 0) {
+      this.gameCoord.scaredGhosts.forEach((ghost) => {
+        ghost.toggleScaredColor();
+      });
+
+      this.gameCoord.ghostFlashTimer = new Timer(() => {
+        this.flashGhosts(flashes + 1, maxFlashes);
+      }, 250);
+    }
+  }
+
+  powerUp() {
+    if (this.gameCoord.remainingDots !== 0) {
+      this.gameCoord.soundManager.setAmbience('power_up');
+    }
+
+    this.gameCoord
+      .removeTimer({ detail: { timer: this.gameCoord.ghostFlashTimer } });
+
+    this.gameCoord.ghostCombo = 0;
+    this.gameCoord.scaredGhosts = [];
+
+    this.gameCoord.ghosts.forEach((ghost) => {
+      if (ghost.mode !== 'eyes') {
+        this.gameCoord.scaredGhosts.push(ghost);
+      }
+    });
+
+    this.gameCoord.scaredGhosts.forEach((ghost) => {
+      ghost.becomeScared();
+    });
+
+    const powerDuration = Math.max((7 - this.gameCoord.level) * 1000, 0);
+    this.gameCoord.ghostFlashTimer = new Timer(() => {
+      this.flashGhosts(0, 9);
+    }, powerDuration);
+  }
+
+  eatGhost(e) {
+    const pauseDuration = 1000;
+    const { position, measurement } = e.detail.ghost;
+
+    this.gameCoord
+      .pauseTimer({ detail: { timer: this.gameCoord.ghostFlashTimer } });
+    this.gameCoord
+      .pauseTimer({ detail: { timer: this.gameCoord.ghostCycleTimer } });
+    this.gameCoord.pauseTimer({ detail: { timer: this.gameCoord.fruitTimer } });
+    this.gameCoord.soundManager.play('eat_ghost');
+
+    this.gameCoord.scaredGhosts = this.gameCoord.scaredGhosts.filter(
+      ghost => ghost.name !== e.detail.ghost.name,
+    );
+    this.gameCoord.eyeGhosts += 1;
+
+    this.gameCoord.ghostCombo += 1;
+    const comboPoints = this.gameCoord.determineComboPoints();
+    window.dispatchEvent(
+      new CustomEvent('awardPoints', {
+        detail: {
+          points: comboPoints,
+        },
+      }),
+    );
+    this.gameCoord
+      .displayText(position, comboPoints, pauseDuration, measurement);
+
+    this.gameCoord.allowPacmanMovement = false;
+    this.gameCoord.pacman.display = false;
+    this.gameCoord.pacman.moving = false;
+    e.detail.ghost.display = false;
+    e.detail.ghost.moving = false;
+
+    this.gameCoord.ghosts.forEach((ghost) => {
+      const ghostRef = ghost;
+      ghostRef.animate = false;
+      ghostRef.pause(true);
+      ghostRef.allowCollision = false;
+    });
+
+    new Timer(() => {
+      this.gameCoord.soundManager.setAmbience('eyes');
+
+      this.gameCoord
+        .resumeTimer({ detail: { timer: this.gameCoord.ghostFlashTimer } });
+      this.gameCoord
+        .resumeTimer({ detail: { timer: this.gameCoord.ghostCycleTimer } });
+      this.gameCoord
+        .resumeTimer({ detail: { timer: this.gameCoord.fruitTimer } });
+      this.gameCoord.allowPacmanMovement = true;
+      this.gameCoord.pacman.display = true;
+      this.gameCoord.pacman.moving = true;
+      e.detail.ghost.display = true;
+      e.detail.ghost.moving = true;
+      this.gameCoord.ghosts.forEach((ghost) => {
+        const ghostRef = ghost;
+        ghostRef.animate = true;
+        ghostRef.pause(false);
+        ghostRef.allowCollision = true;
+      });
+    }, pauseDuration);
+  }
+
+  restoreGhost() {
+    this.gameCoord.eyeGhosts -= 1;
+
+    if (this.gameCoord.eyeGhosts === 0) {
+      const sound = this.gameCoord.scaredGhosts.length > 0
+        ? 'power_up'
+        : this.gameCoord.determineSiren(this.gameCoord.remainingDots);
+      this.gameCoord.soundManager.setAmbience(sound);
+    }
+  }
 }
 
 // removeIf(production)

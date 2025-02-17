@@ -1361,35 +1361,7 @@ class GameCoordinator {
    * @param {Array} entityList - List of entities to be used throughout the game
    */
   drawMaze(mazeArray, entityList) {
-    this.pickups = [this.fruit];
-
-    this.mazeDiv.style.height = `${this.scaledTileSize * 31}px`;
-    this.mazeDiv.style.width = `${this.scaledTileSize * 28}px`;
-    this.gameUi.style.width = `${this.scaledTileSize * 28}px`;
-    this.bottomRow.style.minHeight = `${this.scaledTileSize * 2}px`;
-    this.dotContainer = document.getElementById('dot-container');
-
-    mazeArray.forEach((row, rowIndex) => {
-      row.forEach((block, columnIndex) => {
-        if (block === 'o' || block === 'O') {
-          const type = block === 'o' ? 'pacdot' : 'powerPellet';
-          const points = block === 'o' ? 10 : 50;
-          const dot = new Pickup(
-            type,
-            this.scaledTileSize,
-            columnIndex,
-            rowIndex,
-            this.pacman,
-            this.dotContainer,
-            points,
-          );
-
-          entityList.push(dot);
-          this.pickups.push(dot);
-          this.remainingDots += 1;
-        }
-      });
-    });
+    this.gameUtilities.drawMaze(mazeArray, entityList);
   }
 
   setUiDimensions() {
@@ -2772,6 +2744,43 @@ class GameUtilities {
       ['XooooooooooooooooooooooooooX'],
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
     ];
+  }
+
+  drawMaze(mazeArray, entityList) {
+    this.gameCoord.pickups = [this.gameCoord.fruit];
+
+    this.gameCoord.mazeDiv.style
+      .height = `${this.gameCoord.scaledTileSize * 31}px`;
+    this.gameCoord.mazeDiv.style
+      .width = `${this.gameCoord.scaledTileSize * 28}px`;
+    this.gameCoord.gameUi.style
+      .width = `${this.gameCoord.scaledTileSize * 28}px`;
+    this.gameCoord.bottomRow.style
+      .minHeight = `${this.gameCoord.scaledTileSize * 2}px`;
+    this.gameCoord
+      .dotContainer = document.getElementById('dot-container');
+
+    mazeArray.forEach((row, rowIndex) => {
+      row.forEach((block, columnIndex) => {
+        if (block === 'o' || block === 'O') {
+          const type = block === 'o' ? 'pacdot' : 'powerPellet';
+          const points = block === 'o' ? 10 : 50;
+          const dot = new Pickup(
+            type,
+            this.gameCoord.scaledTileSize,
+            columnIndex,
+            rowIndex,
+            this.gameCoord.pacman,
+            this.gameCoord.dotContainer,
+            points,
+          );
+
+          entityList.push(dot);
+          this.gameCoord.pickups.push(dot);
+          this.gameCoord.remainingDots += 1;
+        }
+      });
+    });
   }
 }
 

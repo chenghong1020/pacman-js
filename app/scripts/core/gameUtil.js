@@ -191,6 +191,43 @@ class GameUtilities {
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
     ];
   }
+
+  drawMaze(mazeArray, entityList) {
+    this.gameCoord.pickups = [this.gameCoord.fruit];
+
+    this.gameCoord.mazeDiv.style
+      .height = `${this.gameCoord.scaledTileSize * 31}px`;
+    this.gameCoord.mazeDiv.style
+      .width = `${this.gameCoord.scaledTileSize * 28}px`;
+    this.gameCoord.gameUi.style
+      .width = `${this.gameCoord.scaledTileSize * 28}px`;
+    this.gameCoord.bottomRow.style
+      .minHeight = `${this.gameCoord.scaledTileSize * 2}px`;
+    this.gameCoord
+      .dotContainer = document.getElementById('dot-container');
+
+    mazeArray.forEach((row, rowIndex) => {
+      row.forEach((block, columnIndex) => {
+        if (block === 'o' || block === 'O') {
+          const type = block === 'o' ? 'pacdot' : 'powerPellet';
+          const points = block === 'o' ? 10 : 50;
+          const dot = new Pickup(
+            type,
+            this.gameCoord.scaledTileSize,
+            columnIndex,
+            rowIndex,
+            this.gameCoord.pacman,
+            this.gameCoord.dotContainer,
+            points,
+          );
+
+          entityList.push(dot);
+          this.gameCoord.pickups.push(dot);
+          this.gameCoord.remainingDots += 1;
+        }
+      });
+    });
+  }
 }
 
 // removeIf(production)

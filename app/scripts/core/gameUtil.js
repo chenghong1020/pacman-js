@@ -194,6 +194,7 @@ class GameUtilities {
 
   drawMaze(mazeArray, entityList) {
     this.gameCoord.pickups = [this.gameCoord.fruit];
+    const portalPairs = new Map([['T', 't'], ['t', 'T']]);
 
     this.gameCoord.mazeDiv.style
       .height = `${this.gameCoord.scaledTileSize * 31}px`;
@@ -208,7 +209,19 @@ class GameUtilities {
 
     mazeArray.forEach((row, rowIndex) => {
       row.forEach((block, columnIndex) => {
-        if (block === 'o' || block === 'O') {
+        if (portalPairs.has(block)) {
+          // 创建传送门实体
+          const portal = new Portal(
+            block,
+            this.gameCoord.scaledTileSize,
+            columnIndex,
+            rowIndex,
+            portalPairs.get(block),
+            this.gameCoord.mazeDiv,
+          );
+          entityList.push(portal);
+          this.gameCoord.pickups.push(portal);
+        } else if (block === 'o' || block === 'O') {
           const type = block === 'o' ? 'pacdot' : 'powerPellet';
           const points = block === 'o' ? 10 : 50;
           const dot = new Pickup(

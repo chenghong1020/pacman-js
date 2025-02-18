@@ -198,6 +198,73 @@ class Pickup {
   }
 }
 
+class Portal extends Pickup {
+  constructor(type, scaledTileSize, column, row, pairType, mazeDiv) {
+    super(type, scaledTileSize, column, row, null, mazeDiv, 0);
+    this.pairType = pairType;
+    this.isActive = true;
+    this.cooldown = 5000;
+    this.lastUsed = 0;
+    this.scaledTileSize = scaledTileSize;
+
+    // eslint-disable-next-line max-len
+    this.animationTarget.style.backgroundImage = `url(app/style/graphics/spriteSheets/portal/${type}.svg)`;
+    this.animationTarget.style.zIndex = 1;
+  }
+
+  getPairPosition() {
+    const maze = null;
+    for (let y = 0; y < maze.length; y += 1) {
+      const x = maze[y][0].indexOf(this.pairType);
+      if (x !== -1) {
+        return {
+          x: (x + 0.5) * this.scaledTileSize,
+          y: (y + 0.5) * this.scaledTileSize,
+        };
+      }
+    }
+    return null;
+  }
+
+  update() {
+    if (this.shouldCheckForCollision()) {
+      const now = Date.now();
+      if (this.checkForCollision(
+        { x: this.x, y: this.y, size: this.size },
+        {
+          x: this.gameCoord.pacman.position.left,
+          y: this.gameCoord.pacman.position.top,
+          size: this.gameCoord.pacman.measurement,
+        },
+      ) && now - this.lastUsed > this.cooldown) {
+        const pairPos = this.getPairPosition();
+        if (pairPos) {
+          window.dispatchEvent(new CustomEvent('teleport', {
+            detail: {
+              targetPos: pairPos,
+              direction: this.gameCoord.pacman.direction,
+              portalType: this.type,
+            },
+          }));
+
+          this.isActive = false;
+          this.lastUsed = now;
+          this.animationTarget.style.opacity = '0.5';
+
+          setTimeout(() => {
+            this.isActive = true;
+            this.animationTarget.style.opacity = '1';
+          }, this.cooldown);
+        }
+      }
+    }
+  }
+
+  shouldCheckForCollision() {
+    return this.isActive && super.shouldCheckForCollision();
+  }
+}
+
 // removeIf(production)
-module.exports = Pickup;
+module.exports = { Pickup, Portal };
 // endRemoveIf(production)

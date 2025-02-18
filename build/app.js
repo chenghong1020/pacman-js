@@ -2772,6 +2772,8 @@ class GameUtilities {
             rowIndex,
             portalPairs.get(block),
             this.gameCoord.mazeDiv,
+            mazeArray, // 新增参数：传入迷宫数组
+            this.gameCoord, // 新增参数：传入游戏协调器
           );
           entityList.push(portal);
           this.gameCoord.pickups.push(portal);
@@ -2998,24 +3000,68 @@ class Pickup {
   }
 }
 
-class Portal extends Pickup {
-  constructor(type, scaledTileSize, column, row, pairType, mazeDiv) {
-    super(type, scaledTileSize, column, row, null, mazeDiv, 0);
+class Portal {
+  // eslint-disable-next-line max-len
+  constructor(type, scaledTileSize, column, row, pairType, mazeDiv, mazeArray, gameCoordinator) {
+    this.type = type;
     this.pairType = pairType;
-    this.isActive = true;
-    this.cooldown = 5000;
-    this.lastUsed = 0;
+    this.mazeArray = mazeArray;
+    this.gameCoord = gameCoordinator;
+    this.mazeDiv = mazeDiv;
     this.scaledTileSize = scaledTileSize;
 
+    // Portal specific properties
+    this.isActive = true;
+    this.cooldown = 3000;
+    this.lastUsed = 0;
+    this.nearPacman = false;
+
+    // Setup position and size
+    this.size = scaledTileSize * 2;
+    this.x = (column * scaledTileSize) - (scaledTileSize * 0.5);
+    this.y = (row * scaledTileSize) - (scaledTileSize * 0.5);
+    this.center = {
+      x: column * scaledTileSize,
+      y: row * scaledTileSize,
+    };
+
+    this.setupAnimationTarget();
+  }
+
+  setupAnimationTarget() {
+    this.animationTarget = document.createElement('div');
+    this.animationTarget.style.position = 'absolute';
+    this.animationTarget.style.backgroundSize = `${this.size}px`;
     // eslint-disable-next-line max-len
-    this.animationTarget.style.backgroundImage = `url(app/style/graphics/spriteSheets/portal/${type}.svg)`;
+    this.animationTarget.style.backgroundImage = `url(app/style/graphics/spriteSheets/portal/${this.type}.svg)`;
+    this.animationTarget.style.height = `${this.size}px`;
+    this.animationTarget.style.width = `${this.size}px`;
+    this.animationTarget.style.top = `${this.y}px`;
+    this.animationTarget.style.left = `${this.x}px`;
     this.animationTarget.style.zIndex = 1;
+    this.animationTarget.style.transition = 'opacity 0.3s';
+    this.mazeDiv.appendChild(this.animationTarget);
+  }
+
+  checkPacmanProximity(maxDistance, pacmanCenter) {
+    if (this.animationTarget.style.visibility !== 'hidden') {
+      const distance = Math.sqrt(
+        ((this.center.x - pacmanCenter.x) ** 2)
+        + ((this.center.y - pacmanCenter.y) ** 2),
+      );
+      this.nearPacman = (distance <= maxDistance);
+    }
+  }
+
+  shouldCheckForCollision() {
+    return this.isActive && this.animationTarget.style.visibility !== 'hidden'
+      && this.nearPacman;
   }
 
   getPairPosition() {
-    const maze = null;
-    for (let y = 0; y < maze.length; y += 1) {
-      const x = maze[y][0].indexOf(this.pairType);
+    for (let y = 0; y < this.mazeArray.length; y += 1) {
+      const row = this.mazeArray[y][0];
+      const x = row.indexOf(this.pairType);
       if (x !== -1) {
         return {
           x: (x + 0.5) * this.scaledTileSize,
@@ -3029,39 +3075,58 @@ class Portal extends Pickup {
   update() {
     if (this.shouldCheckForCollision()) {
       const now = Date.now();
-      if (this.checkForCollision(
-        { x: this.x, y: this.y, size: this.size },
-        {
-          x: this.gameCoord.pacman.position.left,
-          y: this.gameCoord.pacman.position.top,
-          size: this.gameCoord.pacman.measurement,
-        },
-      ) && now - this.lastUsed > this.cooldown) {
+      if (this.checkCollision() && now - this.lastUsed > this.cooldown) {
         const pairPos = this.getPairPosition();
         if (pairPos) {
-          window.dispatchEvent(new CustomEvent('teleport', {
-            detail: {
-              targetPos: pairPos,
-              direction: this.gameCoord.pacman.direction,
-              portalType: this.type,
-            },
-          }));
-
-          this.isActive = false;
-          this.lastUsed = now;
-          this.animationTarget.style.opacity = '0.5';
-
-          setTimeout(() => {
-            this.isActive = true;
-            this.animationTarget.style.opacity = '1';
-          }, this.cooldown);
+          this.triggerTeleport(pairPos);
+          this.startCooldown();
         }
       }
     }
   }
 
-  shouldCheckForCollision() {
-    return this.isActive && super.shouldCheckForCollision();
+  checkCollision() {
+    const pacmanCenter = {
+      x: this.gameCoord.pacman.position.left + this.scaledTileSize,
+      y: this.gameCoord.pacman.position.top + this.scaledTileSize,
+    };
+
+    const portalCenter = {
+      x: this.x + this.size / 2,
+      y: this.y + this.size / 2,
+    };
+
+    const distance = Math.sqrt(
+      // eslint-disable-next-line no-restricted-properties
+      Math.pow(pacmanCenter.x - portalCenter.x, 2)
+      // eslint-disable-next-line no-restricted-properties
+      + Math.pow(pacmanCenter.y - portalCenter.y, 2),
+    );
+
+    return distance < this.scaledTileSize * 0.6;
+  }
+
+  triggerTeleport(targetPos) {
+    window.dispatchEvent(new CustomEvent('teleport', {
+      detail: {
+        source: this,
+        target: {
+          x: targetPos.x - this.scaledTileSize,
+          y: targetPos.y - this.scaledTileSize,
+          direction: this.gameCoord.pacman.direction,
+        },
+      },
+    }));
+  }
+
+  startCooldown() {
+    this.isActive = false;
+    this.lastUsed = Date.now();
+    this.animationTarget.style.opacity = '0.3';
+    setTimeout(() => {
+      this.isActive = true;
+      this.animationTarget.style.opacity = '1';
+    }, this.cooldown);
   }
 }
 

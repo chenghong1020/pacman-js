@@ -218,6 +218,8 @@ class GameUtilities {
             rowIndex,
             portalPairs.get(block),
             this.gameCoord.mazeDiv,
+            mazeArray, // 新增参数：传入迷宫数组
+            this.gameCoord, // 新增参数：传入游戏协调器
           );
           entityList.push(portal);
           this.gameCoord.pickups.push(portal);

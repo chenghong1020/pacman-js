@@ -5,6 +5,8 @@ class GamePlayer {
    */
   constructor(gameCoord) {
     this.gameCoord = gameCoord;
+    this.lastTeleportTime = 0; // 全局冷却时间跟踪
+    window.addEventListener('teleport', this.handleTeleport.bind(this));
   }
 
   deathSequence() {
@@ -288,6 +290,74 @@ class GamePlayer {
         : this.gameCoord.determineSiren(this.gameCoord.remainingDots);
       this.gameCoord.soundManager.setAmbience(sound);
     }
+  }
+
+  handleTeleport(e) {
+    const now = Date.now();
+    const { source, target } = e.detail;
+
+    // 全局冷却检查（1秒内禁止二次传送）
+    if (now - this.lastTeleportTime < 1000) return;
+    
+    // 验证Pacman是否在移动中且传送门可用
+    if (!this.gameCoord.pacman.moving || !source.isActive) return;
+
+    // 执行传送
+    this.executeTeleport(target);
+
+    // 更新全局冷却时间
+    this.lastTeleportTime = now;
+    
+    // 触发传送门本地冷却
+    source.startCooldown();
+    this.findPairPortal(source).startCooldown();
+  }
+
+  executeTeleport(target) {
+    // 暂停Pacman动画防止视觉异常
+    this.gameCoord.pacman.animate = false;
+    
+    // 计算精确的目标位置（网格对齐）
+    const newPos = this.calculateAlignedPosition(target);
+    
+    // 更新Pacman位置和方向
+    this.gameCoord.pacman.position = newPos;
+    this.gameCoord.pacman.direction = target.direction;
+    
+    // 确保位置更新后立即重绘
+    this.gameCoord.pacman.oldPosition = Object.assign({}, newPos);
+    
+    // 恢复动画
+    setTimeout(() => {
+      this.gameCoord.pacman.animate = true;
+    }, 50);
+    
+    // 播放音效
+    this.gameCoord.soundManager.play('teleport');
+  }
+
+  calculateAlignedPosition(target) {
+    // 根据方向调整对齐方式
+    const alignOffset = this.gameCoord.scaledTileSize * 0.5;
+    switch(target.direction) {
+      case 'left':
+        return { left: target.x - alignOffset, top: target.y };
+      case 'right':
+        return { left: target.x + alignOffset, top: target.y };
+      case 'up':
+        return { left: target.x, top: target.y - alignOffset };
+      case 'down':
+        return { left: target.x, top: target.y + alignOffset };
+      default:
+        return { left: target.x, top: target.y };
+    }
+  }
+
+  findPairPortal(source) {
+    // 在实体列表中查找配对传送门
+    return this.gameCoord.entityList.find(entity => 
+      entity instanceof Portal && entity.type === source.pairType
+    );
   }
 }
 

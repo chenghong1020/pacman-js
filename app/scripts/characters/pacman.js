@@ -46,6 +46,7 @@ class Pacman {
     this.spriteFrames = 4;
     this.backgroundOffsetPixels = 0;
     this.animationTarget.style.backgroundPosition = '0px 0px';
+    this.animationTarget.style.animationPlayState = 'running';
   }
 
   /**
@@ -259,6 +260,14 @@ class Pacman {
 
     if (this.moving || this.specialAnimation) {
       this.msSinceLastSprite += elapsedMs;
+    }
+  }
+  setAnimationState(animate) {
+    this.animate = animate;
+    if (animate) {
+      this.animationTarget.style.animationPlayState = 'running';
+    } else {
+      this.animationTarget.style.animationPlayState = 'paused';
     }
   }
 }

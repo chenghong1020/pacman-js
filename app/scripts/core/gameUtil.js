@@ -125,6 +125,7 @@ class GameUtilities {
         `${audioBase}fruit.mp3`,
         `${audioBase}dot_1.mp3`,
         `${audioBase}dot_2.mp3`,
+        `${audioBase}teleport.mp3`, // 添加传送音效
       ];
 
       const totalSources = imgSources.length + audioSources.length;

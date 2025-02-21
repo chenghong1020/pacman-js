@@ -891,6 +891,7 @@ class Pacman {
     this.backgroundOffsetPixels = 0;
     this.animationTarget.style.backgroundPosition = '0px 0px';
     this.animationTarget.style.animationPlayState = 'running';
+    this.isTeleporting = false; // 添加传送状态标记
   }
 
   /**
@@ -1106,12 +1107,33 @@ class Pacman {
       this.msSinceLastSprite += elapsedMs;
     }
   }
+
   setAnimationState(animate) {
+    // 如果是特殊动画或正在传送中，不改变动画状态
+    if (this.specialAnimation || this.isTeleporting) {
+      return;
+    }
+
     this.animate = animate;
-    if (animate) {
+    this.animationTarget.style.animationPlayState = animate
+      ? 'running'
+      : 'paused';
+  }
+
+  // 添加传送动画控制方法
+  setTeleportState(isTeleporting) {
+    this.isTeleporting = isTeleporting;
+
+    if (isTeleporting) {
+      // 保存当前动画状态
+      this.preTelepotAnimationState = this.animate;
+      this.animate = true;
       this.animationTarget.style.animationPlayState = 'running';
     } else {
-      this.animationTarget.style.animationPlayState = 'paused';
+      // 恢复传送前的动画状态
+      this.animate = this.preTelepotAnimationState;
+      // eslint-disable-next-line max-len
+      this.animationTarget.style.animationPlayState = this.preTelepotAnimationState ? 'running' : 'paused';
     }
   }
 }
@@ -2567,7 +2589,7 @@ class GamePlayer {
 
     // 全局冷却检查（1秒内禁止二次传送）
     if (now - this.lastTeleportTime < 1000) return;
-    
+
     // 验证Pacman是否在移动中且传送门可用
     if (!this.gameCoord.pacman.moving || !source.isActive) return;
 
@@ -2576,7 +2598,7 @@ class GamePlayer {
 
     // 更新全局冷却时间
     this.lastTeleportTime = now;
-    
+
     // 触发传送门本地冷却
     source.startCooldown();
     this.findPairPortal(source).startCooldown();
@@ -2585,22 +2607,55 @@ class GamePlayer {
   executeTeleport(target) {
     // 暂停Pacman动画防止视觉异常
     this.gameCoord.pacman.animate = false;
-    
+
+    // 添加传送起点粒子效果
+    const startEffect = document.createElement('div');
+    startEffect.className = 'teleport-effect';
+    startEffect.style.left = `${this.gameCoord.pacman.position.left}px`;
+    startEffect.style.top = `${this.gameCoord.pacman.position.top}px`;
+    this.gameCoord.mazeDiv.appendChild(startEffect);
+
+    // 添加残影效果
+    for (let i = 0; i < 3; i += 1) {
+      setTimeout(() => {
+        const ghost = this.gameCoord.pacman.animationTarget.cloneNode(true);
+        ghost.style.position = 'absolute';
+        ghost.style.left = `${this.gameCoord.pacman.position.left}px`;
+        ghost.style.top = `${this.gameCoord.pacman.position.top}px`;
+        ghost.style.animation = 'ghost-fade 0.3s';
+        this.gameCoord.mazeDiv.appendChild(ghost);
+        setTimeout(() => ghost.remove(), 300);
+      }, i * 50);
+    }
+
     // 计算精确的目标位置（网格对齐）
     const newPos = this.calculateAlignedPosition(target);
-    
+
     // 更新Pacman位置和方向
     this.gameCoord.pacman.position = newPos;
     this.gameCoord.pacman.direction = target.direction;
-    
+
     // 确保位置更新后立即重绘
     this.gameCoord.pacman.oldPosition = Object.assign({}, newPos);
-    
+
+    // 添加传送终点粒子效果
+    const endEffect = document.createElement('div');
+    endEffect.className = 'teleport-effect';
+    endEffect.style.left = `${newPos.left}px`;
+    endEffect.style.top = `${newPos.top}px`;
+    this.gameCoord.mazeDiv.appendChild(endEffect);
+
+    // 清理特效元素
+    setTimeout(() => {
+      startEffect.remove();
+      endEffect.remove();
+    }, 300);
+
     // 恢复动画
     setTimeout(() => {
       this.gameCoord.pacman.animate = true;
     }, 50);
-    
+
     // 播放音效
     this.gameCoord.soundManager.play('teleport');
   }
@@ -2608,7 +2663,7 @@ class GamePlayer {
   calculateAlignedPosition(target) {
     // 根据方向调整对齐方式
     const alignOffset = this.gameCoord.scaledTileSize * 0.5;
-    switch(target.direction) {
+    switch (target.direction) {
       case 'left':
         return { left: target.x - alignOffset, top: target.y };
       case 'right':
@@ -2624,9 +2679,8 @@ class GamePlayer {
 
   findPairPortal(source) {
     // 在实体列表中查找配对传送门
-    return this.gameCoord.entityList.find(entity => 
-      entity instanceof Portal && entity.type === source.pairType
-    );
+    // eslint-disable-next-line max-len
+    return this.gameCoord.entityList.find(entity => entity instanceof Portal && entity.type === source.pairType);
   }
 }
 
@@ -2758,6 +2812,7 @@ class GameUtilities {
         `${audioBase}fruit.mp3`,
         `${audioBase}dot_1.mp3`,
         `${audioBase}dot_2.mp3`,
+        `${audioBase}teleport.mp3`, // 添加传送音效
       ];
 
       const totalSources = imgSources.length + audioSources.length;
@@ -3120,7 +3175,26 @@ class Portal {
     this.animationTarget.style.left = `${this.x}px`;
     this.animationTarget.style.zIndex = 1;
     this.animationTarget.style.transition = 'opacity 0.3s';
+    // 添加发光动画
+    this.animationTarget.style.animation = 'portal-glow 1s infinite alternate';
+    this.animationTarget.classList.add('portal-animation');
     this.mazeDiv.appendChild(this.animationTarget);
+  }
+
+  startCooldown() {
+    this.isActive = false;
+    this.lastUsed = Date.now();
+    // 冷却状态视觉效果
+    this.animationTarget.style.filter = 'opacity(0.3) grayscale(80%)';
+    this.animationTarget.style.animation = 'cooldown-spin 3s linear';
+
+    setTimeout(() => {
+      this.isActive = true;
+      // 恢复正常状态
+      this.animationTarget.style.filter = 'none';
+      // eslint-disable-next-line max-len
+      this.animationTarget.style.animation = 'portal-glow 1s infinite alternate';
+    }, this.cooldown);
   }
 
   checkPacmanProximity(maxDistance, pacmanCenter) {
@@ -3197,16 +3271,6 @@ class Portal {
         },
       },
     }));
-  }
-
-  startCooldown() {
-    this.isActive = false;
-    this.lastUsed = Date.now();
-    this.animationTarget.style.opacity = '0.3';
-    setTimeout(() => {
-      this.isActive = true;
-      this.animationTarget.style.opacity = '1';
-    }, this.cooldown);
   }
 }
 
@@ -3525,6 +3589,11 @@ class SoundManager {
       this.dotPlayer.volume = this.masterVolume;
     }
 
+    // 更新传送音效音量
+    if (this.teleportSound) {
+      this.teleportSound.volume = this.masterVolume * 0.7;
+    }
+
     if (this.masterVolume === 0) {
       this.stopAmbience();
     } else {
@@ -3537,6 +3606,14 @@ class SoundManager {
    * @param {String} sound
    */
   play(sound) {
+    if (sound === 'teleport') {
+      // 动态创建音频实例，避免重用可能导致的问题
+      const teleportSound = new Audio(`${this.baseUrl}teleport.${this.fileFormat}`);
+      teleportSound.volume = this.masterVolume * 0.7;
+      teleportSound.play();
+      return;
+    }
+
     this.soundEffect = new Audio(`${this.baseUrl}${sound}.${this.fileFormat}`);
     this.soundEffect.volume = this.masterVolume;
     this.soundEffect.play();

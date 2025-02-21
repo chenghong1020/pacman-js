@@ -47,6 +47,7 @@ class Pacman {
     this.backgroundOffsetPixels = 0;
     this.animationTarget.style.backgroundPosition = '0px 0px';
     this.animationTarget.style.animationPlayState = 'running';
+    this.isTeleporting = false; // 添加传送状态标记
   }
 
   /**
@@ -262,12 +263,33 @@ class Pacman {
       this.msSinceLastSprite += elapsedMs;
     }
   }
+
   setAnimationState(animate) {
+    // 如果是特殊动画或正在传送中，不改变动画状态
+    if (this.specialAnimation || this.isTeleporting) {
+      return;
+    }
+
     this.animate = animate;
-    if (animate) {
+    this.animationTarget.style.animationPlayState = animate
+      ? 'running'
+      : 'paused';
+  }
+
+  // 添加传送动画控制方法
+  setTeleportState(isTeleporting) {
+    this.isTeleporting = isTeleporting;
+
+    if (isTeleporting) {
+      // 保存当前动画状态
+      this.preTelepotAnimationState = this.animate;
+      this.animate = true;
       this.animationTarget.style.animationPlayState = 'running';
     } else {
-      this.animationTarget.style.animationPlayState = 'paused';
+      // 恢复传送前的动画状态
+      this.animate = this.preTelepotAnimationState;
+      // eslint-disable-next-line max-len
+      this.animationTarget.style.animationPlayState = this.preTelepotAnimationState ? 'running' : 'paused';
     }
   }
 }

@@ -298,7 +298,7 @@ class GamePlayer {
 
     // 全局冷却检查（1秒内禁止二次传送）
     if (now - this.lastTeleportTime < 1000) return;
-    
+
     // 验证Pacman是否在移动中且传送门可用
     if (!this.gameCoord.pacman.moving || !source.isActive) return;
 
@@ -307,7 +307,7 @@ class GamePlayer {
 
     // 更新全局冷却时间
     this.lastTeleportTime = now;
-    
+
     // 触发传送门本地冷却
     source.startCooldown();
     this.findPairPortal(source).startCooldown();
@@ -316,22 +316,55 @@ class GamePlayer {
   executeTeleport(target) {
     // 暂停Pacman动画防止视觉异常
     this.gameCoord.pacman.animate = false;
-    
+
+    // 添加传送起点粒子效果
+    const startEffect = document.createElement('div');
+    startEffect.className = 'teleport-effect';
+    startEffect.style.left = `${this.gameCoord.pacman.position.left}px`;
+    startEffect.style.top = `${this.gameCoord.pacman.position.top}px`;
+    this.gameCoord.mazeDiv.appendChild(startEffect);
+
+    // 添加残影效果
+    for (let i = 0; i < 3; i += 1) {
+      setTimeout(() => {
+        const ghost = this.gameCoord.pacman.animationTarget.cloneNode(true);
+        ghost.style.position = 'absolute';
+        ghost.style.left = `${this.gameCoord.pacman.position.left}px`;
+        ghost.style.top = `${this.gameCoord.pacman.position.top}px`;
+        ghost.style.animation = 'ghost-fade 0.3s';
+        this.gameCoord.mazeDiv.appendChild(ghost);
+        setTimeout(() => ghost.remove(), 300);
+      }, i * 50);
+    }
+
     // 计算精确的目标位置（网格对齐）
     const newPos = this.calculateAlignedPosition(target);
-    
+
     // 更新Pacman位置和方向
     this.gameCoord.pacman.position = newPos;
     this.gameCoord.pacman.direction = target.direction;
-    
+
     // 确保位置更新后立即重绘
     this.gameCoord.pacman.oldPosition = Object.assign({}, newPos);
-    
+
+    // 添加传送终点粒子效果
+    const endEffect = document.createElement('div');
+    endEffect.className = 'teleport-effect';
+    endEffect.style.left = `${newPos.left}px`;
+    endEffect.style.top = `${newPos.top}px`;
+    this.gameCoord.mazeDiv.appendChild(endEffect);
+
+    // 清理特效元素
+    setTimeout(() => {
+      startEffect.remove();
+      endEffect.remove();
+    }, 300);
+
     // 恢复动画
     setTimeout(() => {
       this.gameCoord.pacman.animate = true;
     }, 50);
-    
+
     // 播放音效
     this.gameCoord.soundManager.play('teleport');
   }
@@ -339,7 +372,7 @@ class GamePlayer {
   calculateAlignedPosition(target) {
     // 根据方向调整对齐方式
     const alignOffset = this.gameCoord.scaledTileSize * 0.5;
-    switch(target.direction) {
+    switch (target.direction) {
       case 'left':
         return { left: target.x - alignOffset, top: target.y };
       case 'right':
@@ -355,9 +388,8 @@ class GamePlayer {
 
   findPairPortal(source) {
     // 在实体列表中查找配对传送门
-    return this.gameCoord.entityList.find(entity => 
-      entity instanceof Portal && entity.type === source.pairType
-    );
+    // eslint-disable-next-line max-len
+    return this.gameCoord.entityList.find(entity => entity instanceof Portal && entity.type === source.pairType);
   }
 }
 

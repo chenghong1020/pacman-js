@@ -33,6 +33,11 @@ class SoundManager {
       this.dotPlayer.volume = this.masterVolume;
     }
 
+    // 更新传送音效音量
+    if (this.teleportSound) {
+      this.teleportSound.volume = this.masterVolume * 0.7;
+    }
+
     if (this.masterVolume === 0) {
       this.stopAmbience();
     } else {
@@ -45,6 +50,14 @@ class SoundManager {
    * @param {String} sound
    */
   play(sound) {
+    if (sound === 'teleport') {
+      // 动态创建音频实例，避免重用可能导致的问题
+      const teleportSound = new Audio(`${this.baseUrl}teleport.${this.fileFormat}`);
+      teleportSound.volume = this.masterVolume * 0.7;
+      teleportSound.play();
+      return;
+    }
+
     this.soundEffect = new Audio(`${this.baseUrl}${sound}.${this.fileFormat}`);
     this.soundEffect.volume = this.masterVolume;
     this.soundEffect.play();

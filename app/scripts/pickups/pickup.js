@@ -238,7 +238,26 @@ class Portal {
     this.animationTarget.style.left = `${this.x}px`;
     this.animationTarget.style.zIndex = 1;
     this.animationTarget.style.transition = 'opacity 0.3s';
+    // 添加发光动画
+    this.animationTarget.style.animation = 'portal-glow 1s infinite alternate';
+    this.animationTarget.classList.add('portal-animation');
     this.mazeDiv.appendChild(this.animationTarget);
+  }
+
+  startCooldown() {
+    this.isActive = false;
+    this.lastUsed = Date.now();
+    // 冷却状态视觉效果
+    this.animationTarget.style.filter = 'opacity(0.3) grayscale(80%)';
+    this.animationTarget.style.animation = 'cooldown-spin 3s linear';
+
+    setTimeout(() => {
+      this.isActive = true;
+      // 恢复正常状态
+      this.animationTarget.style.filter = 'none';
+      // eslint-disable-next-line max-len
+      this.animationTarget.style.animation = 'portal-glow 1s infinite alternate';
+    }, this.cooldown);
   }
 
   checkPacmanProximity(maxDistance, pacmanCenter) {
@@ -315,16 +334,6 @@ class Portal {
         },
       },
     }));
-  }
-
-  startCooldown() {
-    this.isActive = false;
-    this.lastUsed = Date.now();
-    this.animationTarget.style.opacity = '0.3';
-    setTimeout(() => {
-      this.isActive = true;
-      this.animationTarget.style.opacity = '1';
-    }, this.cooldown);
   }
 }
 

@@ -424,3 +424,41 @@ body {
     opacity: 1;
   }
 }
+@keyframes portal-glow {
+  from {
+    filter: hue-rotate(0deg) brightness(100%);
+  }
+  to {
+    filter: hue-rotate(90deg) brightness(130%);
+  }
+}
+@keyframes cooldown-spin {
+  from {
+    transform: rotate(0deg);
+    opacity: 0.3;
+  }
+  to {
+    transform: rotate(1080deg);
+    opacity: 1;
+  }
+}
+.portal-animation {
+  animation: portal-glow 1s infinite alternate;
+}
+
+.teleport-effect {
+  position: absolute;
+  background: radial-gradient(circle, cyan 10%, transparent 70%);
+  animation: teleport-burst 0.3s ease-out;
+}
+
+@keyframes teleport-burst {
+  from {
+    transform: scale(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}

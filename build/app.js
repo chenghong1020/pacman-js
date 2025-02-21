@@ -3608,6 +3608,7 @@ class SoundManager {
   play(sound) {
     if (sound === 'teleport') {
       // 动态创建音频实例，避免重用可能导致的问题
+      // eslint-disable-next-line max-len
       const teleportSound = new Audio(`${this.baseUrl}teleport.${this.fileFormat}`);
       teleportSound.volume = this.masterVolume * 0.7;
       teleportSound.play();

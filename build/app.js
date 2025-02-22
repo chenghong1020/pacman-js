@@ -2192,6 +2192,7 @@ class GameFlow {
                       if (
                         entityRef instanceof Pickup
                         && entityRef.type !== 'fruit'
+                        && !(entityRef instanceof Portal) // 新增：排除 Portal
                       ) {
                         this.gameCoord.remainingDots += 1;
                       }
@@ -2851,7 +2852,7 @@ class GameUtilities {
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
+      ['XoooootooooooooooooooooooooX'],
       ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
       ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
       ['XooooooXXooooXXooooXXooooooX'],
@@ -2866,7 +2867,7 @@ class GameUtilities {
       ['XXXXXXoXX          XXoXXXXXX'],
       ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
       ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
+      ['XooooooooooooXXooooooToooooX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XOooXXooooooo  oooooooXXooOX'],
@@ -2910,8 +2911,7 @@ class GameUtilities {
             this.gameCoord, // 新增参数：传入游戏协调器
           );
           entityList.push(portal);
-          // 移除这一行
-          // this.gameCoord.pickups.push(portal);
+          this.gameCoord.pickups.push(portal);
         } else if (block === 'o' || block === 'O') {
           const type = block === 'o' ? 'pacdot' : 'powerPellet';
           const points = block === 'o' ? 10 : 50;
@@ -2935,6 +2935,7 @@ class GameUtilities {
 }
 
 
+/* eslint-disable max-len */
 class Pickup {
   constructor(type, scaledTileSize, column, row, pacman, mazeDiv, points) {
     this.type = type;
@@ -3135,86 +3136,78 @@ class Pickup {
   }
 }
 
-class Portal {
-  // eslint-disable-next-line max-len
+class Portal extends Pickup {
   constructor(type, scaledTileSize, column, row, pairType, mazeDiv, mazeArray, gameCoordinator) {
-    this.type = type;
+    // 调用父类构造函数，传入必要参数
+    super(type, scaledTileSize, column, row, gameCoordinator.pacman, mazeDiv, 0);
+
     this.pairType = pairType;
     this.mazeArray = mazeArray;
     this.gameCoord = gameCoordinator;
-    this.mazeDiv = mazeDiv;
-    this.scaledTileSize = scaledTileSize;
+    this.scaledTileSize = scaledTileSize; // 显式设置 scaledTileSize
 
     // Portal specific properties
     this.isActive = true;
     this.cooldown = 3000;
     this.lastUsed = 0;
-    this.nearPacman = false;
+  }
 
-    // Setup position and size
-    this.size = scaledTileSize * 2;
-    this.x = (column * scaledTileSize) - (scaledTileSize * 0.5);
-    this.y = (row * scaledTileSize) - (scaledTileSize * 0.5);
+  setStyleMeasurements(type, scaledTileSize, column, row) {
+    // 设置 size 和位置
+    this.size = scaledTileSize * 1.5; // 改为 1.5 倍而不是 2 倍
+    this.x = (column * scaledTileSize) - (scaledTileSize * 0.25); // 调整偏移量
+    this.y = (row * scaledTileSize) - (scaledTileSize * 0.25);
+
     this.center = {
       x: column * scaledTileSize,
       y: row * scaledTileSize,
     };
 
-    this.setupAnimationTarget();
-  }
-
-  setupAnimationTarget() {
+    // 创建并设置动画目标
     this.animationTarget = document.createElement('div');
     this.animationTarget.style.position = 'absolute';
     this.animationTarget.style.backgroundSize = `${this.size}px`;
-    // eslint-disable-next-line max-len
-    this.animationTarget.style.backgroundImage = `url(app/style/graphics/spriteSheets/portal/${this.type}.svg)`;
+    this.animationTarget.style.backgroundImage = this.determineImage();
     this.animationTarget.style.height = `${this.size}px`;
     this.animationTarget.style.width = `${this.size}px`;
     this.animationTarget.style.top = `${this.y}px`;
     this.animationTarget.style.left = `${this.x}px`;
+
+    // Portal 特有的样式
     this.animationTarget.style.zIndex = 1;
     this.animationTarget.style.transition = 'opacity 0.3s';
-    // 添加发光动画
     this.animationTarget.style.animation = 'portal-glow 1s infinite alternate';
     this.animationTarget.classList.add('portal-animation');
+
     this.mazeDiv.appendChild(this.animationTarget);
+  }
+
+  // 重写父类的 determineImage 方法
+  determineImage() {
+    return `url(app/style/graphics/spriteSheets/portal/${this.type}.svg)`;
   }
 
   startCooldown() {
     this.isActive = false;
     this.lastUsed = Date.now();
-    // 冷却状态视觉效果
     this.animationTarget.style.filter = 'opacity(0.3) grayscale(80%)';
     this.animationTarget.style.animation = 'cooldown-spin 3s linear';
 
     setTimeout(() => {
       this.isActive = true;
-      // 恢复正常状态
       this.animationTarget.style.filter = 'none';
-      // eslint-disable-next-line max-len
       this.animationTarget.style.animation = 'portal-glow 1s infinite alternate';
     }, this.cooldown);
   }
 
-  checkPacmanProximity(maxDistance, pacmanCenter) {
-    if (this.animationTarget.style.visibility !== 'hidden') {
-      const distance = Math.sqrt(
-        ((this.center.x - pacmanCenter.x) ** 2)
-        + ((this.center.y - pacmanCenter.y) ** 2),
-      );
-      this.nearPacman = (distance <= maxDistance);
-    }
-  }
-
+  // 重写父类的 shouldCheckForCollision 方法
   shouldCheckForCollision() {
-    return this.isActive && this.animationTarget.style.visibility !== 'hidden'
-      && this.nearPacman;
+    return this.isActive && super.shouldCheckForCollision();
   }
 
   getPairPosition() {
     for (let y = 0; y < this.mazeArray.length; y += 1) {
-      const row = this.mazeArray[y][0];
+      const row = this.mazeArray[y];
       const x = row.indexOf(this.pairType);
       if (x !== -1) {
         return {
@@ -3226,10 +3219,21 @@ class Portal {
     return null;
   }
 
+  // 重写父类的 update 方法
   update() {
     if (this.shouldCheckForCollision()) {
       const now = Date.now();
-      if (this.checkCollision() && now - this.lastUsed > this.cooldown) {
+      if (this.checkForCollision(
+        {
+          x: this.x,
+          y: this.y,
+          size: this.size,
+        }, {
+          x: this.gameCoord.pacman.position.left,
+          y: this.gameCoord.pacman.position.top,
+          size: this.gameCoord.pacman.measurement,
+        },
+      ) && now - this.lastUsed > this.cooldown) {
         const pairPos = this.getPairPosition();
         if (pairPos) {
           this.triggerTeleport(pairPos);
@@ -3237,27 +3241,6 @@ class Portal {
         }
       }
     }
-  }
-
-  checkCollision() {
-    const pacmanCenter = {
-      x: this.gameCoord.pacman.position.left + this.scaledTileSize,
-      y: this.gameCoord.pacman.position.top + this.scaledTileSize,
-    };
-
-    const portalCenter = {
-      x: this.x + this.size / 2,
-      y: this.y + this.size / 2,
-    };
-
-    const distance = Math.sqrt(
-      // eslint-disable-next-line no-restricted-properties
-      Math.pow(pacmanCenter.x - portalCenter.x, 2)
-      // eslint-disable-next-line no-restricted-properties
-      + Math.pow(pacmanCenter.y - portalCenter.y, 2),
-    );
-
-    return distance < this.scaledTileSize * 0.6;
   }
 
   triggerTeleport(targetPos) {

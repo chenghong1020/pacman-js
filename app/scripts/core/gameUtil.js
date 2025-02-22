@@ -164,7 +164,7 @@ class GameUtilities {
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
+      ['XoooootooooooooooooooooooooX'],
       ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
       ['XoXXXXoXXoXXXXXXXXoXXoXXXXoX'],
       ['XooooooXXooooXXooooXXooooooX'],
@@ -179,7 +179,7 @@ class GameUtilities {
       ['XXXXXXoXX          XXoXXXXXX'],
       ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
       ['XXXXXXoXX XXXXXXXX XXoXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
+      ['XooooooooooooXXooooooToooooX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XOooXXooooooo  oooooooXXooOX'],
@@ -223,8 +223,7 @@ class GameUtilities {
             this.gameCoord, // 新增参数：传入游戏协调器
           );
           entityList.push(portal);
-          // 移除这一行
-          // this.gameCoord.pickups.push(portal);
+          this.gameCoord.pickups.push(portal);
         } else if (block === 'o' || block === 'O') {
           const type = block === 'o' ? 'pacdot' : 'powerPellet';
           const points = block === 'o' ? 10 : 50;

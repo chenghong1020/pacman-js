@@ -264,6 +264,7 @@ class GameFlow {
                       if (
                         entityRef instanceof Pickup
                         && entityRef.type !== 'fruit'
+                        && !(entityRef instanceof Portal) // 新增：排除 Portal
                       ) {
                         this.gameCoord.remainingDots += 1;
                       }

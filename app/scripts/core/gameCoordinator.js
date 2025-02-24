@@ -22,6 +22,7 @@ class GameCoordinator {
     this.gameUtilities = new GameUtilities(this);
     this.gameFlow = new GameFlow(this);
     this.gamePlayer = new GamePlayer(this);
+    this.portalManager = new PortalManager(); // 新增传送门管理器
 
     this.mazeArray = GameUtilities.maze;
 
@@ -240,9 +241,18 @@ class GameCoordinator {
   init() {
     this.registerEventListeners();
     this.registerTouchListeners();
+    this.initPortalSystem(); // 新增传送门系统初始化
+
 
     this.gameEngine = new GameEngine(this.maxFps, this.entityList);
     this.gameEngine.start();
+  }
+
+  /**
+   * 初始化传送门系统
+   */
+  initPortalSystem() {
+    this.portalManager.init(this.gameUtilities.getPortalConfig());
   }
 
   /**
@@ -377,6 +387,16 @@ class GameCoordinator {
     window.addEventListener('addTimer', this.addTimer.bind(this));
     window.addEventListener('removeTimer', this.removeTimer.bind(this));
     window.addEventListener('releaseGhost', this.releaseGhost.bind(this));
+    // 新增传送门相关事件监听
+    window.addEventListener('portalEntered', this.handlePortalEntry.bind(this));
+  }
+
+  /**
+   * 处理进入传送门事件
+   * @param {CustomEvent} e - 包含传送门ID和实体信息
+   */
+  handlePortalEntry(e) {
+    this.portalManager.handlePortalEntry(e.detail);
   }
 
   /**

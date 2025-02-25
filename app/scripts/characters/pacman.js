@@ -7,6 +7,7 @@ class Pacman {
     this.pacmanArrow = document.getElementById('pacman-arrow');
 
     this.reset();
+    this.registerEventListeners();
   }
 
   /**
@@ -228,6 +229,37 @@ class Pacman {
     this.msSinceLastSprite = updatedProperties.msSinceLastSprite;
     this.animationTarget = updatedProperties.animationTarget;
     this.backgroundOffsetPixels = updatedProperties.backgroundOffsetPixels;
+  }
+
+  /**
+   * 注册事件监听器
+   */
+  registerEventListeners() {
+    window.addEventListener('entityTeleported', (e) => {
+      if (e.detail.entity === this) {
+        this.handleTeleport(e.detail.targetPosition);
+      }
+    });
+  }
+
+  /**
+   * 处理传送门传送
+   * @param {Object} position - 目标位置
+   * @param {number} position.x - x坐标
+   * @param {number} position.y - y坐标
+   */
+  handleTeleport(position) {
+    this.position = {
+      top: position.y,
+      left: position.x
+    };
+    this.oldPosition = Object.assign({}, this.position);
+    
+    this.moving = false;
+
+    window.dispatchEvent(new CustomEvent('teleportComplete', {
+      detail: { entity: this }
+    }));
   }
 
   /**

@@ -240,6 +240,41 @@ class CharacterUtil {
   }
 
   /**
+   * 计算传送门出口位置
+   * @param {Object} portalPosition - 传送门位置
+   * @param {string} direction - 实体当前朝向
+   * @param {number} scaledTileSize - 网格大小
+   * @returns {Object} 调整后的出口位置
+   */
+  calculatePortalExitPosition(portalPosition, direction, scaledTileSize) {
+    const offset = scaledTileSize * 1.5;
+    const position = {
+      top: portalPosition.top,
+      left: portalPosition.left,
+    };
+
+    switch (direction) {
+      case this.directions.up:
+        position.top -= offset;
+        break;
+      case this.directions.down:
+        position.top += offset;
+        break;
+      case this.directions.left:
+        position.left -= offset;
+        break;
+      case this.directions.right:
+        position.left += offset;
+        break;
+      default:
+        // 未知方向时保持原位置不变
+        break;
+    }
+
+    return position;
+  }
+
+  /**
    * Advances spritesheet by one frame if needed
    * @param {Object} character - The character which needs to be animated
    */

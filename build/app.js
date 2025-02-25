@@ -1095,14 +1095,14 @@ class Pacman {
   handleTeleport(position) {
     this.position = {
       top: position.y,
-      left: position.x
+      left: position.x,
     };
     this.oldPosition = Object.assign({}, this.position);
-    
+
     this.moving = false;
 
     window.dispatchEvent(new CustomEvent('teleportComplete', {
-      detail: { entity: this }
+      detail: { entity: this },
     }));
   }
 
@@ -1975,6 +1975,7 @@ class GameEngine {
 }
 
 
+/* eslint-disable max-len */
 class GameFlow {
   /**
    * Reference to the GameCoordinator instance.
@@ -2183,6 +2184,9 @@ class GameFlow {
     }, 2250);
   }
 
+  /**
+   * 处理关卡推进
+   */
   advanceLevel() {
     this.gameCoord.allowPause = false;
     this.gameCoord.cutscene = true;
@@ -2238,13 +2242,13 @@ class GameFlow {
                       if (entityRef instanceof Ghost) {
                         entityRef.resetDefaultSpeed();
                       }
-                      if (
-                        entityRef instanceof Pickup
-                        && entityRef.type !== 'fruit'
-                      ) {
+                      if (entityRef instanceof Pickup && entityRef.type !== 'fruit') {
                         this.gameCoord.remainingDots += 1;
                       }
                     });
+                    // 重置传送门系统
+                    this.gameCoord.portalManager.reset();
+
                     this.gameCoord.startGameplay();
                   }, 500);
                 }, 250);
@@ -3126,7 +3130,7 @@ class Portal extends Pickup {
   constructor(scaledTileSize, column, row, pacman, mazeDiv, portalId) {
     // 调用父类构造函数，传入 portal 类型，无分数
     super('portal', scaledTileSize, column, row, pacman, mazeDiv, 0);
-    
+
     this.portalId = portalId;
     this.breathingTimer = 0;
     this.breathingScale = 1;
@@ -3157,7 +3161,7 @@ class Portal extends Pickup {
   updateAnimation() {
     this.breathingTimer += 0.1;
     this.breathingScale += 0.01 * this.breathingDirection;
-    
+
     if (this.breathingScale >= 1.2) {
       this.breathingDirection = -1;
     } else if (this.breathingScale <= 0.8) {
@@ -3189,8 +3193,8 @@ class Portal extends Pickup {
         window.dispatchEvent(new CustomEvent('portalEntered', {
           detail: {
             portalId: this.portalId,
-            entity: this.pacman
-          }
+            entity: this.pacman,
+          },
         }));
       }
     }
@@ -3447,6 +3451,41 @@ class CharacterUtil {
     }
 
     return newPosition;
+  }
+
+  /**
+   * 计算传送门出口位置
+   * @param {Object} portalPosition - 传送门位置
+   * @param {string} direction - 实体当前朝向
+   * @param {number} scaledTileSize - 网格大小
+   * @returns {Object} 调整后的出口位置
+   */
+  calculatePortalExitPosition(portalPosition, direction, scaledTileSize) {
+    const offset = scaledTileSize * 1.5;
+    const position = {
+      top: portalPosition.top,
+      left: portalPosition.left,
+    };
+
+    switch (direction) {
+      case this.directions.up:
+        position.top -= offset;
+        break;
+      case this.directions.down:
+        position.top += offset;
+        break;
+      case this.directions.left:
+        position.left -= offset;
+        break;
+      case this.directions.right:
+        position.left += offset;
+        break;
+      default:
+        // 未知方向时保持原位置不变
+        break;
+    }
+
+    return position;
   }
 
   /**

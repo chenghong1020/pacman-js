@@ -251,14 +251,14 @@ class Pacman {
   handleTeleport(position) {
     this.position = {
       top: position.y,
-      left: position.x
+      left: position.x,
     };
     this.oldPosition = Object.assign({}, this.position);
-    
+
     this.moving = false;
 
     window.dispatchEvent(new CustomEvent('teleportComplete', {
-      detail: { entity: this }
+      detail: { entity: this },
     }));
   }
 

@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 class GameFlow {
   /**
    * Reference to the GameCoordinator instance.
@@ -206,6 +207,9 @@ class GameFlow {
     }, 2250);
   }
 
+  /**
+   * 处理关卡推进
+   */
   advanceLevel() {
     this.gameCoord.allowPause = false;
     this.gameCoord.cutscene = true;
@@ -261,13 +265,13 @@ class GameFlow {
                       if (entityRef instanceof Ghost) {
                         entityRef.resetDefaultSpeed();
                       }
-                      if (
-                        entityRef instanceof Pickup
-                        && entityRef.type !== 'fruit'
-                      ) {
+                      if (entityRef instanceof Pickup && entityRef.type !== 'fruit') {
                         this.gameCoord.remainingDots += 1;
                       }
                     });
+                    // 重置传送门系统
+                    this.gameCoord.portalManager.reset();
+
                     this.gameCoord.startGameplay();
                   }, 500);
                 }, 250);

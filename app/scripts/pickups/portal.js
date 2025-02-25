@@ -2,7 +2,7 @@ class Portal extends Pickup {
   constructor(scaledTileSize, column, row, pacman, mazeDiv, portalId) {
     // 调用父类构造函数，传入 portal 类型，无分数
     super('portal', scaledTileSize, column, row, pacman, mazeDiv, 0);
-    
+
     this.portalId = portalId;
     this.breathingTimer = 0;
     this.breathingScale = 1;
@@ -33,7 +33,7 @@ class Portal extends Pickup {
   updateAnimation() {
     this.breathingTimer += 0.1;
     this.breathingScale += 0.01 * this.breathingDirection;
-    
+
     if (this.breathingScale >= 1.2) {
       this.breathingDirection = -1;
     } else if (this.breathingScale <= 0.8) {
@@ -65,8 +65,8 @@ class Portal extends Pickup {
         window.dispatchEvent(new CustomEvent('portalEntered', {
           detail: {
             portalId: this.portalId,
-            entity: this.pacman
-          }
+            entity: this.pacman,
+          },
         }));
       }
     }

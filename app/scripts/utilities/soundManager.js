@@ -6,8 +6,26 @@ class SoundManager {
     this.paused = false;
     this.cutscene = true;
 
+    // 添加传送门音效
+    this.soundEffects = {
+      teleport: `${this.baseUrl}teleport.${this.fileFormat}`,
+      // ... 其他音效
+    };
+
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     this.ambience = new AudioContext();
+
+    // 注册传送门事件监听
+    this.registerPortalEvents();
+  }
+
+  /**
+   * 注册传送门相关事件监听
+   */
+  registerPortalEvents() {
+    window.addEventListener('portalTeleport', () => {
+      this.play('teleport');
+    });
   }
 
   /**

@@ -17,7 +17,6 @@
 
 #### 二、实体层 (Entities)
 1. **Pacman**
-   - ✅ 碰撞检测时触发`portalEntered`事件
    - ✅ 接收传送位置更新指令
 
 2. **Pickup扩展 Portal子类**

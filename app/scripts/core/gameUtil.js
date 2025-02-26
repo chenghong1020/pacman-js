@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
 class GameUtilities {
   /**
    * Reference to the GameCoordinator instance.
@@ -107,6 +109,8 @@ class GameUtilities {
 
         // Misc
         'app/style/graphics/extra_life.svg',
+        // Portal
+        `${imgBase}pickups/portal.svg`,
       ];
 
       const audioBase = 'app/style/audio/';
@@ -125,6 +129,8 @@ class GameUtilities {
         `${audioBase}fruit.mp3`,
         `${audioBase}dot_1.mp3`,
         `${audioBase}dot_2.mp3`,
+        // 添加传送门音效
+        `${audioBase}teleport.mp3`,
       ];
 
       const totalSources = imgSources.length + audioSources.length;
@@ -154,6 +160,80 @@ class GameUtilities {
         })
         .catch(this.gameCoord.displayErrorMessage);
     });
+  }
+
+  /**
+   * 校验传送门配对是否合法
+   * @param {Array} mazeArray - 迷宫数组
+   * @returns {boolean} 是否合法
+   */
+  static validatePortalPairs(mazeArray) {
+    let tCount = 0;
+    let TCount = 0;
+
+    // 统计传送门数量
+    for (const row of mazeArray) {
+      for (const cell of row) {
+        if (cell === 't') tCount = +1;
+        if (cell === 'T') TCount = +1;
+      }
+    }
+
+    // 检查是否都成对出现
+    return tCount === TCount && tCount > 0;
+  }
+
+  /**
+   * 绘制迷宫和所有实体
+   * @param {Array} mazeArray - 迷宫数组
+   * @param {Array} entityList - 实体列表
+   */
+  drawMaze(mazeArray, entityList) {
+    const dotContainer = document.getElementById('dot-container');
+    const pickups = [this.gameCoord.fruit];
+
+    this.gameCoord.mazeDiv.style.height = `${this.gameCoord.scaledTileSize * 31}px`;
+    this.gameCoord.mazeDiv.style.width = `${this.gameCoord.scaledTileSize * 28}px`;
+    this.gameCoord.gameUi.style.width = `${this.gameCoord.scaledTileSize * 28}px`;
+    this.gameCoord.bottomRow.style.minHeight = `${this.gameCoord.scaledTileSize * 2}px`;
+
+    mazeArray.forEach((row, rowIndex) => {
+      row.forEach((block, columnIndex) => {
+        if (block === 'o' || block === 'O') {
+          // 绘制豆子
+          const type = block === 'o' ? 'pacdot' : 'powerPellet';
+          const points = block === 'o' ? 10 : 50;
+          const dot = new Pickup(
+            type,
+            this.gameCoord.scaledTileSize,
+            columnIndex,
+            rowIndex,
+            this.gameCoord.pacman,
+            dotContainer,
+            points,
+          );
+
+          entityList.push(dot);
+          pickups.push(dot);
+          this.gameCoord.remainingDots += 1;
+        } else if (block === 't' || block === 'T') {
+          // 绘制传送门
+          const portal = new Portal(
+            this.gameCoord.scaledTileSize,
+            columnIndex,
+            rowIndex,
+            block,
+            dotContainer,
+          );
+
+          entityList.push(portal);
+          pickups.push(portal);
+        }
+      });
+    });
+
+    this.gameCoord.pickups = pickups;
+    this.gameCoord.dotContainer = dotContainer;
   }
 
   static get maze() {

@@ -2945,6 +2945,8 @@ class PortalManager {
     this.portalPairs = new Map(); // 存储传送门配对关系
     this.cooldownTime = 1000; // 传送冷却时间（毫秒）
     this.isInCooldown = false;
+    this.cooldownTimer = null;
+    this.scaledTileSize = null; // 添加瓦片大小属性
   }
 
   /**
@@ -2954,6 +2956,7 @@ class PortalManager {
   init(config) {
     this.setupPortalPairs(config.portalPairs);
     this.soundManager = config.soundManager;
+    this.scaledTileSize = config.scaledTileSize; // 保存瓦片大小
   }
 
   /**
@@ -2993,7 +2996,7 @@ class PortalManager {
    * @param {string} exitPortalId - 出口传送门ID
    */
   teleportEntity(entity, exitPortalId) {
-    const exitPortal = document.getElementById(exitPortalId);
+    const exitPortal = this.portalPairs.get(exitPortalId);
     if (!exitPortal) {
       return;
     }
@@ -3001,14 +3004,23 @@ class PortalManager {
     // 播放传送音效
     this.soundManager.play('teleport');
 
+    // 计算目标位置（使用游戏坐标系统）
+    const targetPosition = {
+      x: exitPortal.x * this.scaledTileSize,
+      y: exitPortal.y * this.scaledTileSize,
+    };
+
+    // 如果实体是 Pacman，需要考虑其中心点偏移
+    if (entity.measurement) {
+      targetPosition.x += (this.scaledTileSize - entity.measurement) / 2;
+      targetPosition.y += (this.scaledTileSize - entity.measurement) / 2;
+    }
+
     // 触发实体传送事件
     window.dispatchEvent(new CustomEvent('entityTeleported', {
       detail: {
         entity,
-        targetPosition: {
-          x: exitPortal.offsetLeft,
-          y: exitPortal.offsetTop,
-        },
+        targetPosition,
       },
     }));
   }
@@ -3018,8 +3030,15 @@ class PortalManager {
    */
   startCooldown() {
     this.isInCooldown = true;
-    setTimeout(() => {
+
+    // 清除可能存在的之前的定时器
+    if (this.cooldownTimer) {
+      clearTimeout(this.cooldownTimer);
+    }
+
+    this.cooldownTimer = setTimeout(() => {
       this.isInCooldown = false;
+      this.cooldownTimer = null;
     }, this.cooldownTime);
   }
 
@@ -3027,6 +3046,12 @@ class PortalManager {
    * 重置传送门系统
    */
   reset() {
+    // 清除冷却定时器
+    if (this.cooldownTimer) {
+      clearTimeout(this.cooldownTimer);
+      this.cooldownTimer = null;
+    }
+
     this.isInCooldown = false;
     // 可以在这里添加其他重置逻辑
   }

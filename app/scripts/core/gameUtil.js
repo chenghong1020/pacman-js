@@ -271,6 +271,44 @@ class GameUtilities {
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
     ];
   }
+
+  /**
+   * 获取传送门配置
+   * @returns {Object} 传送门配置对象
+   */
+  getPortalConfig() {
+    // 扫描迷宫数组查找传送门位置
+    const portalPairs = [];
+    let tPortal = null;
+
+    this.mazeArray.forEach((row, rowIndex) => {
+      row.forEach((cell, columnIndex) => {
+        if (cell === 't' || cell === 'T') {
+          const portal = {
+            x: columnIndex,
+            y: rowIndex,
+            type: cell,
+          };
+
+          if (cell === 't') {
+            tPortal = portal;
+          } else if (cell === 'T' && tPortal) {
+            // 找到一对传送门
+            portalPairs.push({
+              entrance: tPortal,
+              exit: portal,
+            });
+            tPortal = null;
+          }
+        }
+      });
+    });
+
+    return {
+      pairs: portalPairs,
+      scaledTileSize: this.gameCoord.scaledTileSize,
+    };
+  }
 }
 
 // removeIf(production)

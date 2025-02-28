@@ -277,36 +277,82 @@ class GameUtilities {
    * @returns {Object} 传送门配置对象
    */
   getPortalConfig() {
-    // 扫描迷宫数组查找传送门位置
-    const portalPairs = [];
-    let tPortal = null;
+    // 扫描迷宫数组查找所有传送门
+    const portals = [];
 
     this.mazeArray.forEach((row, rowIndex) => {
       row.forEach((cell, columnIndex) => {
         if (cell === 't' || cell === 'T') {
-          const portal = {
+          portals.push({
+            id: `portal_${rowIndex}_${columnIndex}`,
             x: columnIndex,
             y: rowIndex,
             type: cell,
-          };
-
-          if (cell === 't') {
-            tPortal = portal;
-          } else if (cell === 'T' && tPortal) {
-            // 找到一对传送门
-            portalPairs.push({
-              entrance: tPortal,
-              exit: portal,
-            });
-            tPortal = null;
-          }
+          });
         }
       });
+    });
+
+    // 验证传送门数量
+    if (portals.length % 2 !== 0) {
+      console.warn('传送门数量不成对，可能导致配对错误');
+      return {
+        pairs: [],
+        scaledTileSize: this.gameCoord.scaledTileSize,
+        soundManager: this.gameCoord.soundManager,
+      };
+    }
+
+    // 按类型配对传送门
+    const portalPairs = [];
+    const tPortals = portals.filter(p => p.type === 't');
+    const TPortals = portals.filter(p => p.type === 'T');
+
+    // 确保数量相等
+    if (tPortals.length !== TPortals.length) {
+      console.warn('t 和 T 类型传送门数量不匹配');
+      return {
+        pairs: [],
+        scaledTileSize: this.gameCoord.scaledTileSize,
+        soundManager: this.gameCoord.soundManager,
+      };
+    }
+
+    // 配对最近的传送门
+    tPortals.forEach((tPortal) => {
+      // 找到最近的 T 类型传送门
+      const nearestTPortal = TPortals.reduce((nearest, current) => {
+        const currentDist = Math.hypot(
+          current.x - tPortal.x,
+          current.y - tPortal.y,
+        );
+        const nearestDist = nearest ? Math.hypot(
+          nearest.x - tPortal.x,
+          nearest.y - tPortal.y,
+        ) : Infinity;
+
+        return currentDist < nearestDist ? current : nearest;
+      }, null);
+
+      if (nearestTPortal) {
+        portalPairs.push({
+          portal1Id: tPortal.id,
+          portal2Id: nearestTPortal.id,
+          portal1: tPortal,
+          portal2: nearestTPortal,
+        });
+        // 从候选列表中移除已配对的传送门
+        const index = TPortals.indexOf(nearestTPortal);
+        if (index > -1) {
+          TPortals.splice(index, 1);
+        }
+      }
     });
 
     return {
       pairs: portalPairs,
       scaledTileSize: this.gameCoord.scaledTileSize,
+      soundManager: this.gameCoord.soundManager,
     };
   }
 }

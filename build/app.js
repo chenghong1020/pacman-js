@@ -2905,41 +2905,88 @@ class GameUtilities {
    * @returns {Object} 传送门配置对象
    */
   getPortalConfig() {
-    // 扫描迷宫数组查找传送门位置
-    const portalPairs = [];
-    let tPortal = null;
+    // 扫描迷宫数组查找所有传送门
+    const portals = [];
 
     this.mazeArray.forEach((row, rowIndex) => {
       row.forEach((cell, columnIndex) => {
         if (cell === 't' || cell === 'T') {
-          const portal = {
+          portals.push({
+            id: `portal_${rowIndex}_${columnIndex}`,
             x: columnIndex,
             y: rowIndex,
             type: cell,
-          };
-
-          if (cell === 't') {
-            tPortal = portal;
-          } else if (cell === 'T' && tPortal) {
-            // 找到一对传送门
-            portalPairs.push({
-              entrance: tPortal,
-              exit: portal,
-            });
-            tPortal = null;
-          }
+          });
         }
       });
+    });
+
+    // 验证传送门数量
+    if (portals.length % 2 !== 0) {
+      console.warn('传送门数量不成对，可能导致配对错误');
+      return {
+        pairs: [],
+        scaledTileSize: this.gameCoord.scaledTileSize,
+        soundManager: this.gameCoord.soundManager,
+      };
+    }
+
+    // 按类型配对传送门
+    const portalPairs = [];
+    const tPortals = portals.filter(p => p.type === 't');
+    const TPortals = portals.filter(p => p.type === 'T');
+
+    // 确保数量相等
+    if (tPortals.length !== TPortals.length) {
+      console.warn('t 和 T 类型传送门数量不匹配');
+      return {
+        pairs: [],
+        scaledTileSize: this.gameCoord.scaledTileSize,
+        soundManager: this.gameCoord.soundManager,
+      };
+    }
+
+    // 配对最近的传送门
+    tPortals.forEach((tPortal) => {
+      // 找到最近的 T 类型传送门
+      const nearestTPortal = TPortals.reduce((nearest, current) => {
+        const currentDist = Math.hypot(
+          current.x - tPortal.x,
+          current.y - tPortal.y,
+        );
+        const nearestDist = nearest ? Math.hypot(
+          nearest.x - tPortal.x,
+          nearest.y - tPortal.y,
+        ) : Infinity;
+
+        return currentDist < nearestDist ? current : nearest;
+      }, null);
+
+      if (nearestTPortal) {
+        portalPairs.push({
+          portal1Id: tPortal.id,
+          portal2Id: nearestTPortal.id,
+          portal1: tPortal,
+          portal2: nearestTPortal,
+        });
+        // 从候选列表中移除已配对的传送门
+        const index = TPortals.indexOf(nearestTPortal);
+        if (index > -1) {
+          TPortals.splice(index, 1);
+        }
+      }
     });
 
     return {
       pairs: portalPairs,
       scaledTileSize: this.gameCoord.scaledTileSize,
+      soundManager: this.gameCoord.soundManager,
     };
   }
 }
 
 
+/* eslint-disable max-len */
 class PortalManager {
   constructor() {
     this.portalPairs = new Map(); // 存储传送门配对关系
@@ -2954,9 +3001,20 @@ class PortalManager {
    * @param {Object} config - 传送门配置信息
    */
   init(config) {
-    this.setupPortalPairs(config.portalPairs);
+    // 添加参数校验
+    if (!config || !Array.isArray(config.pairs)) {
+      // eslint-disable-next-line no-param-reassign
+      config = {
+        pairs: [],
+        scaledTileSize: 8,
+        soundManager: null,
+      };
+    }
+
+    this.pairs = config.pairs; // 保存传送门配置数据
+    this.setupPortalPairs(config.pairs);
     this.soundManager = config.soundManager;
-    this.scaledTileSize = config.scaledTileSize; // 保存瓦片大小
+    this.scaledTileSize = config.scaledTileSize;
   }
 
   /**
@@ -2996,19 +3054,29 @@ class PortalManager {
    * @param {string} exitPortalId - 出口传送门ID
    */
   teleportEntity(entity, exitPortalId) {
-    const exitPortal = this.portalPairs.get(exitPortalId);
-    if (!exitPortal) {
+    // 从配置数据中找到对应的传送门信息
+    const portalPair = this.pairs.find(
+      pair => pair.portal1Id === exitPortalId || pair.portal2Id === exitPortalId,
+    );
+
+    if (!portalPair) {
       return;
     }
+
+    // 获取正确的传送门信息
+    const exitPortalInfo = portalPair.portal1Id === exitPortalId
+      ? portalPair.portal1 : portalPair.portal2;
 
     // 播放传送音效
     this.soundManager.play('teleport');
 
     // 计算目标位置（使用游戏坐标系统）
+
     const targetPosition = {
-      x: exitPortal.x * this.scaledTileSize,
-      y: exitPortal.y * this.scaledTileSize,
+      x: exitPortalInfo.x * this.scaledTileSize,
+      y: exitPortalInfo.y * this.scaledTileSize,
     };
+
 
     // 如果实体是 Pacman，需要考虑其中心点偏移
     if (entity.measurement) {

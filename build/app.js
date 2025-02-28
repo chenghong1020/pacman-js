@@ -1099,7 +1099,8 @@ class Pacman {
     };
     this.oldPosition = Object.assign({}, this.position);
 
-    this.moving = false;
+    // 移除这行代码，保持移动状态
+    // this.moving = false;
 
     window.dispatchEvent(new CustomEvent('teleportComplete', {
       detail: { entity: this },
@@ -2850,8 +2851,9 @@ class GameUtilities {
             this.gameCoord.scaledTileSize,
             columnIndex,
             rowIndex,
-            block,
+            this.gameCoord.pacman, // 修复：传入 pacman 实例而不是 block
             dotContainer,
+            block, // 新增：将 block 作为第六个参数传入，用于标识传送门类型
           );
 
           entityList.push(portal);
@@ -2994,6 +2996,7 @@ class PortalManager {
     this.isInCooldown = false;
     this.cooldownTimer = null;
     this.scaledTileSize = null; // 添加瓦片大小属性
+    this.characterUtil = null; // 添加 characterUtil 属性
   }
 
   /**
@@ -3015,6 +3018,7 @@ class PortalManager {
     this.setupPortalPairs(config.pairs);
     this.soundManager = config.soundManager;
     this.scaledTileSize = config.scaledTileSize;
+    this.characterUtil = new CharacterUtil(config.scaledTileSize); // 初始化 CharacterUtil
   }
 
   /**
@@ -3067,24 +3071,29 @@ class PortalManager {
     const exitPortalInfo = portalPair.portal1Id === exitPortalId
       ? portalPair.portal1 : portalPair.portal2;
 
+    // 计算初始目标位置
+    const initialPosition = {
+      top: exitPortalInfo.y * this.scaledTileSize,
+      left: exitPortalInfo.x * this.scaledTileSize,
+    };
+
+    // 使用 CharacterUtil 计算合适的出口位置
+    const targetPosition = this.characterUtil.calculatePortalExitPosition(
+      initialPosition,
+      entity.direction,
+      this.scaledTileSize,
+    );
+
+    // 如果实体是 Pacman，调整中心点偏移
+    if (entity.measurement) {
+      targetPosition.left += (this.scaledTileSize - entity.measurement) / 2;
+      targetPosition.top += (this.scaledTileSize - entity.measurement) / 2;
+    }
+
     // 播放传送音效
     this.soundManager.play('teleport');
 
-    // 计算目标位置（使用游戏坐标系统）
-
-    const targetPosition = {
-      x: exitPortalInfo.x * this.scaledTileSize,
-      y: exitPortalInfo.y * this.scaledTileSize,
-    };
-
-
-    // 如果实体是 Pacman，需要考虑其中心点偏移
-    if (entity.measurement) {
-      targetPosition.x += (this.scaledTileSize - entity.measurement) / 2;
-      targetPosition.y += (this.scaledTileSize - entity.measurement) / 2;
-    }
-
-    // 触发实体传送事件
+    // 触发传送事件
     window.dispatchEvent(new CustomEvent('entityTeleported', {
       detail: {
         entity,

@@ -255,7 +255,8 @@ class Pacman {
     };
     this.oldPosition = Object.assign({}, this.position);
 
-    this.moving = false;
+    // 移除这行代码，保持移动状态
+    // this.moving = false;
 
     window.dispatchEvent(new CustomEvent('teleportComplete', {
       detail: { entity: this },

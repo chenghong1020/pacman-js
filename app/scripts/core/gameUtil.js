@@ -222,8 +222,9 @@ class GameUtilities {
             this.gameCoord.scaledTileSize,
             columnIndex,
             rowIndex,
-            block,
+            this.gameCoord.pacman, // 修复：传入 pacman 实例而不是 block
             dotContainer,
+            block, // 新增：将 block 作为第六个参数传入，用于标识传送门类型
           );
 
           entityList.push(portal);

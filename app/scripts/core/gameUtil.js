@@ -171,15 +171,12 @@ class GameUtilities {
     let tCount = 0;
     let TCount = 0;
 
-    // 统计传送门数量
     for (const row of mazeArray) {
       for (const cell of row) {
-        if (cell === 't') tCount = +1;
-        if (cell === 'T') TCount = +1;
+        if (cell === 't') tCount += 1;
+        if (cell === 'T') TCount += 1;
       }
     }
-
-    // 检查是否都成对出现
     return tCount === TCount && tCount > 0;
   }
 
@@ -218,13 +215,14 @@ class GameUtilities {
           this.gameCoord.remainingDots += 1;
         } else if (block === 't' || block === 'T') {
           // 绘制传送门
+          const portalId = `portal_${rowIndex}_${columnIndex}_${block}`;
           const portal = new Portal(
             this.gameCoord.scaledTileSize,
             columnIndex,
             rowIndex,
-            this.gameCoord.pacman, // 修复：传入 pacman 实例而不是 block
+            this.gameCoord.pacman,
             dotContainer,
-            block, // 新增：将 block 作为第六个参数传入，用于标识传送门类型
+            portalId,
           );
 
           entityList.push(portal);
@@ -277,15 +275,15 @@ class GameUtilities {
    * 获取传送门配置
    * @returns {Object} 传送门配置对象
    */
-  getPortalConfig() {
-    // 扫描迷宫数组查找所有传送门
+  getPortalConfig(mazeArray) { // 显式传入 mazeArray
     const portals = [];
 
-    this.mazeArray.forEach((row, rowIndex) => {
+    // 生成唯一 ID 并收集传送门
+    mazeArray.forEach((row, rowIndex) => {
       row.forEach((cell, columnIndex) => {
         if (cell === 't' || cell === 'T') {
           portals.push({
-            id: `portal_${rowIndex}_${columnIndex}`,
+            id: `portal_${rowIndex}_${columnIndex}_${cell}`,
             x: columnIndex,
             y: rowIndex,
             type: cell,
@@ -295,8 +293,7 @@ class GameUtilities {
     });
 
     // 验证传送门数量
-    if (portals.length % 2 !== 0) {
-      console.warn('传送门数量不成对，可能导致配对错误');
+    if (!this.constructor.validatePortalPairs(mazeArray)) {
       return {
         pairs: [],
         scaledTileSize: this.gameCoord.scaledTileSize,
@@ -304,54 +301,23 @@ class GameUtilities {
       };
     }
 
-    // 按类型配对传送门
-    const portalPairs = [];
+    // 按类型分组并配对
+    const pairs = [];
     const tPortals = portals.filter(p => p.type === 't');
     const TPortals = portals.filter(p => p.type === 'T');
 
-    // 确保数量相等
-    if (tPortals.length !== TPortals.length) {
-      console.warn('t 和 T 类型传送门数量不匹配');
-      return {
-        pairs: [],
-        scaledTileSize: this.gameCoord.scaledTileSize,
-        soundManager: this.gameCoord.soundManager,
-      };
+    // 一一配对
+    for (let i = 0; i < tPortals.length; i += 1) {
+      pairs.push({
+        portal1Id: tPortals[i].id,
+        portal2Id: TPortals[i].id,
+        portal1: tPortals[i],
+        portal2: TPortals[i],
+      });
     }
 
-    // 配对最近的传送门
-    tPortals.forEach((tPortal) => {
-      // 找到最近的 T 类型传送门
-      const nearestTPortal = TPortals.reduce((nearest, current) => {
-        const currentDist = Math.hypot(
-          current.x - tPortal.x,
-          current.y - tPortal.y,
-        );
-        const nearestDist = nearest ? Math.hypot(
-          nearest.x - tPortal.x,
-          nearest.y - tPortal.y,
-        ) : Infinity;
-
-        return currentDist < nearestDist ? current : nearest;
-      }, null);
-
-      if (nearestTPortal) {
-        portalPairs.push({
-          portal1Id: tPortal.id,
-          portal2Id: nearestTPortal.id,
-          portal1: tPortal,
-          portal2: nearestTPortal,
-        });
-        // 从候选列表中移除已配对的传送门
-        const index = TPortals.indexOf(nearestTPortal);
-        if (index > -1) {
-          TPortals.splice(index, 1);
-        }
-      }
-    });
-
     return {
-      pairs: portalPairs,
+      pairs,
       scaledTileSize: this.gameCoord.scaledTileSize,
       soundManager: this.gameCoord.soundManager,
     };

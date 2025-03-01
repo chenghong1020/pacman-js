@@ -362,23 +362,6 @@ class GameCoordinator {
     window.addEventListener('releaseGhost', this.releaseGhost.bind(this));
     // 新增传送门相关事件监听
     window.addEventListener('portalEntered', this.handlePortalEntry.bind(this));
-    window.addEventListener('entityTeleported', this.handleEntityTeleported.bind(this));
-  }
-
-  /**
-   * 处理实体传送事件
-   * @param {CustomEvent} e - 包含实体和目标位置信息
-   */
-  // eslint-disable-next-line no-unused-vars
-  handleEntityTeleported(e) {
-    // 暂停游戏逻辑
-    this.gameEngine.pause();
-
-    // 等待传送完成
-    window.addEventListener('teleportComplete', () => {
-      // 恢复游戏逻辑
-      this.gameEngine.resume();
-    }, { once: true });
   }
 
   /**

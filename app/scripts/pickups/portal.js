@@ -5,7 +5,7 @@ class Portal extends Pickup {
 
     this.portalId = portalId;
     this.breathingTimer = 0;
-    this.breathingScale = 1;
+    this.breathingScale = 0.75; // 修改初始大小为 0.75
     this.breathingDirection = 1;
 
     // 初始化传送门动画
@@ -31,12 +31,12 @@ class Portal extends Pickup {
    * 更新传送门动画状态（呼吸效果）
    */
   updateAnimation() {
-    this.breathingTimer += 0.1;
     this.breathingScale += 0.01 * this.breathingDirection;
 
-    if (this.breathingScale >= 1.2) {
+    // 修改呼吸效果的范围
+    if (this.breathingScale >= 0.85) { // 从 1.2 改为 0.85
       this.breathingDirection = -1;
-    } else if (this.breathingScale <= 0.8) {
+    } else if (this.breathingScale <= 0.65) { // 从 0.8 改为 0.65
       this.breathingDirection = 1;
     }
 
@@ -77,9 +77,9 @@ class Portal extends Pickup {
    */
   reset() {
     this.animationTarget.style.visibility = 'visible';
-    this.breathingScale = 1;
+    this.breathingScale = 0.75; // 这里也要改为 0.75
     this.breathingDirection = 1;
-    this.animationTarget.style.transform = 'scale(1)';
+    this.animationTarget.style.transform = 'scale(0.75)'; // 这里也要改为 0.75
   }
 }
 

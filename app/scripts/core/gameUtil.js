@@ -238,7 +238,7 @@ class GameUtilities {
   static get maze() {
     return [
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
+      ['XtoooooooooooXXooooooooooooX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
@@ -266,7 +266,7 @@ class GameUtilities {
       ['XooooooXXooooXXooooXXooooooX'],
       ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
       ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
+      ['XoooooooooooooooooooooooooTX'],
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
     ];
   }
@@ -275,8 +275,9 @@ class GameUtilities {
    * 获取传送门配置
    * @returns {Object} 传送门配置对象
    */
-  getPortalConfig(mazeArray) { // 显式传入 mazeArray
+  getPortalConfig() {
     const portals = [];
+    const { mazeArray } = this.gameCoord; // 使用 gameCoord 中的 mazeArray
 
     // 生成唯一 ID 并收集传送门
     mazeArray.forEach((row, rowIndex) => {

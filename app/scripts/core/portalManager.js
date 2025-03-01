@@ -2,7 +2,7 @@
 class PortalManager {
   constructor() {
     this.portalPairs = new Map(); // 存储传送门配对关系
-    this.cooldownTime = 1000; // 传送冷却时间（毫秒）
+    this.cooldownTime = 2000; // 修改传送冷却时间为 2 秒
     this.isInCooldown = false;
     this.cooldownTimer = null;
     this.scaledTileSize = null; // 添加瓦片大小属性
@@ -100,8 +100,18 @@ class PortalManager {
       targetPosition.top += (this.scaledTileSize - entity.measurement) / 2;
     }
 
+    console.log('Portal teleporting entity:', {
+      exitPortalId,
+      exitPortalInfo,
+      initialPosition,
+      targetPosition,
+      entity,
+    });
+
     // 播放传送音效
-    this.soundManager.play('teleport');
+    if (this.soundManager) {
+      this.soundManager.play('teleport');
+    }
 
     // 触发传送事件
     window.dispatchEvent(new CustomEvent('entityTeleported', {

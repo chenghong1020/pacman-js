@@ -249,9 +249,14 @@ class Pacman {
    * @param {number} position.y - y坐标
    */
   handleTeleport(position) {
+    console.log('Pacman teleporting:', {
+      from: { ...this.position },
+      to: { top: position.top, left: position.left },
+    });
+
     this.position = {
-      top: position.y,
-      left: position.x,
+      top: position.top,
+      left: position.left,
     };
     this.oldPosition = Object.assign({}, this.position);
 

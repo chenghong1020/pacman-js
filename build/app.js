@@ -1093,9 +1093,14 @@ class Pacman {
    * @param {number} position.y - y坐标
    */
   handleTeleport(position) {
+    console.log('Pacman teleporting:', {
+      from: { ...this.position },
+      to: { top: position.top, left: position.left },
+    });
+
     this.position = {
-      top: position.y,
-      left: position.x,
+      top: position.top,
+      left: position.left,
     };
     this.oldPosition = Object.assign({}, this.position);
 
@@ -2850,7 +2855,7 @@ class GameUtilities {
   static get maze() {
     return [
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
-      ['XooooooooooooXXooooooooooooX'],
+      ['XtoooooooooooXXooooooooooooX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
       ['XOXXXXoXXXXXoXXoXXXXXoXXXXOX'],
       ['XoXXXXoXXXXXoXXoXXXXXoXXXXoX'],
@@ -2878,7 +2883,7 @@ class GameUtilities {
       ['XooooooXXooooXXooooXXooooooX'],
       ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
       ['XoXXXXXXXXXXoXXoXXXXXXXXXXoX'],
-      ['XooooooooooooooooooooooooooX'],
+      ['XoooooooooooooooooooooooooTX'],
       ['XXXXXXXXXXXXXXXXXXXXXXXXXXXX'],
     ];
   }
@@ -2887,8 +2892,9 @@ class GameUtilities {
    * 获取传送门配置
    * @returns {Object} 传送门配置对象
    */
-  getPortalConfig(mazeArray) { // 显式传入 mazeArray
+  getPortalConfig() {
     const portals = [];
+    const { mazeArray } = this.gameCoord; // 使用 gameCoord 中的 mazeArray
 
     // 生成唯一 ID 并收集传送门
     mazeArray.forEach((row, rowIndex) => {
@@ -2941,7 +2947,7 @@ class GameUtilities {
 class PortalManager {
   constructor() {
     this.portalPairs = new Map(); // 存储传送门配对关系
-    this.cooldownTime = 1000; // 传送冷却时间（毫秒）
+    this.cooldownTime = 2000; // 修改传送冷却时间为 2 秒
     this.isInCooldown = false;
     this.cooldownTimer = null;
     this.scaledTileSize = null; // 添加瓦片大小属性
@@ -3039,8 +3045,18 @@ class PortalManager {
       targetPosition.top += (this.scaledTileSize - entity.measurement) / 2;
     }
 
+    console.log('Portal teleporting entity:', {
+      exitPortalId,
+      exitPortalInfo,
+      initialPosition,
+      targetPosition,
+      entity,
+    });
+
     // 播放传送音效
-    this.soundManager.play('teleport');
+    if (this.soundManager) {
+      this.soundManager.play('teleport');
+    }
 
     // 触发传送事件
     window.dispatchEvent(new CustomEvent('entityTeleported', {
@@ -3292,7 +3308,7 @@ class Portal extends Pickup {
 
     this.portalId = portalId;
     this.breathingTimer = 0;
-    this.breathingScale = 1;
+    this.breathingScale = 0.75; // 修改初始大小为 0.75
     this.breathingDirection = 1;
 
     // 初始化传送门动画
@@ -3318,12 +3334,12 @@ class Portal extends Pickup {
    * 更新传送门动画状态（呼吸效果）
    */
   updateAnimation() {
-    this.breathingTimer += 0.1;
     this.breathingScale += 0.01 * this.breathingDirection;
 
-    if (this.breathingScale >= 1.2) {
+    // 修改呼吸效果的范围
+    if (this.breathingScale >= 0.85) { // 从 1.2 改为 0.85
       this.breathingDirection = -1;
-    } else if (this.breathingScale <= 0.8) {
+    } else if (this.breathingScale <= 0.65) { // 从 0.8 改为 0.65
       this.breathingDirection = 1;
     }
 
@@ -3364,9 +3380,9 @@ class Portal extends Pickup {
    */
   reset() {
     this.animationTarget.style.visibility = 'visible';
-    this.breathingScale = 1;
+    this.breathingScale = 0.75; // 这里也要改为 0.75
     this.breathingDirection = 1;
-    this.animationTarget.style.transform = 'scale(1)';
+    this.animationTarget.style.transform = 'scale(0.75)'; // 这里也要改为 0.75
   }
 }
 
